@@ -17,7 +17,7 @@ public abstract class BaseGameObserver implements GameObserver {
     private int mGameSteps = 0;
     private int mGameProgress = 0;
 
-    public BaseGameObserver(Context context, Handler handler){
+    public BaseGameObserver(Context context, Handler handler) {
         this.mContext = context;
         this.mHandler = handler;
     }
@@ -44,10 +44,6 @@ public abstract class BaseGameObserver implements GameObserver {
     @Override
     public int getGameSteps() {
         return mGameSteps;
-    }
-
-    public static String getGameName() {
-        return "default";
     }
 
     @Override

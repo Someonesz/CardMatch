@@ -1,7 +1,5 @@
 package top.someones.cardmatch.core;
 
-import android.content.Context;
-import android.os.Handler;
 import android.view.View;
 
 public interface GameObserver {
@@ -12,8 +10,6 @@ public interface GameObserver {
     int GAME_WIN = 103;
 
     int MAX_VIEW = 16;
-
-//    GameObserver initGameObserver(Context context, Handler handler);
 
     View[][] newGame();
 
