@@ -1,77 +1,229 @@
 package top.someones.cardmatch.core;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Handler;
+import android.util.Log;
+import android.view.View;
+import android.widget.ImageView;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 import top.someones.cardmatch.R;
 
 
-
 public class GameManagement {
 
-    private static final Map<String, Class<? extends GameObserver>> bean = new HashMap<>();
-    private static final Map<String, GameObserver> mod = new HashMap<>();
-    private static final Map<String, GameResources<?>> gameRes = new HashMap<>();
-
-    static {
-        gameRes.put("扑克",new DefaultResource());
-    }
+    private static final Map<String, GameResources> mGameResources = new HashMap<>();
+    private static final int[] mDefaultRes = {R.raw.poker, R.raw.solar, R.raw.food};
 
     private GameManagement() {
     }
 
-    public static void addMod(Context context) {
-//        File modDirectory = context.getFileStreamPath("mod");
-//        for (File files : modDirectory.listFiles()) {
-//            ModAdaptor modAdaptor = ModAdaptor.loadMod(files);
-//            if (modAdaptor != null) {
-//                mod.put(modAdaptor.mGameName, modAdaptor);
-//            }
-//        }
+    public static void init(Context context) {
+        File modDirectory = context.getFileStreamPath("mod");
+        for (File file : modDirectory.listFiles()) {
+            if (file.isDirectory()) {
+                GameResources res = getGameRes(file);
+                if (res != null) {
+                    mGameResources.put(res.getGameName(), res);
+                }
+            }
+        }
     }
 
-    public static GameObserver getBean(String name, Context context, Handler handler) throws InstantiationException, IllegalAccessException {
-        return GameObserverAdapter.makeGameObserver(context,handler,gameRes.get(name));
+    private static GameResources getGameRes(File resDirectory) {
+        try {
+            String resPath = resDirectory.getPath();
+            for (File gameConfig : resDirectory.listFiles()) {
+                if (gameConfig.isFile()) {
+                    if (gameConfig.getName().equals("GameConfig.json")) {
+                        JSONObject config = new JSONObject(readTextFile(new FileInputStream(gameConfig)));
+                        String gameName = config.getString("Mod_Name");
+                        String frontImagePath = config.getString("FrontImageName");
+                        JSONArray jarr = config.getJSONArray("BackImageName");
+                        String[] backImageName = new String[jarr.length()];
+                        for (int i = 0; i < jarr.length(); i++) {
+                            backImageName[i] = jarr.getString(i);
+                        }
+                        return new GameResources(gameName, resPath, frontImagePath, backImageName);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+        return null;
     }
 
-//    public static GameObserver getModBean(String name, Context context, Handler handler) throws InstantiationException, IllegalAccessException {
-//        return mod.get(name).initGameObserver(context, handler);
-//    }
+    private static String readTextFile(InputStream input) throws IOException {
+        StringBuilder sb = new StringBuilder();
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(input))) {
+            String str = br.readLine();
+            while (str != null) {
+                sb.append(str);
+                str = br.readLine();
+            }
+            input.close();
+        }
+        return sb.toString();
+    }
 
+    public static GameObserver getGameObserver(String name, Context context, Handler handler) {
+        GameResources res = mGameResources.get(name);
+        if (res == null)
+            return null;
+        Bitmap frontRes;
+        Bitmap[] backRes;
+        try {
+            frontRes = BitmapFactory.decodeStream(new FileInputStream(new File(res.getResPath(), res.getFrontResName())));
+            backRes = new Bitmap[res.getBackResLength()];
+            int index = 0;
+            for (String backResName : res.getBackResName()) {
+                File resFile = new File(res.getResPath(), backResName);
+                if (resFile.isFile()) {
+                    backRes[index] = BitmapFactory.decodeStream(new FileInputStream(resFile));
+                    index++;
+                }
+            }
+        } catch (FileNotFoundException e) {
+            return null;
+        }
+        if (frontRes != null && backRes != null)
+            return new GameObserverAdaptor(context, handler, frontRes, backRes);
+        return null;
+    }
 
     public static Set<String> getAllGameName() {
-        return bean.keySet();
+        return mGameResources.keySet();
     }
 
-     static class DefaultResource implements GameResources<Integer>{
-
-        public static final int FrontImage = R.drawable.b;
-        public static final int[] BackImage = {R.drawable.poker1, R.drawable.poker2, R.drawable.poker3, R.drawable.poker4, R.drawable.poker5, R.drawable.poker6, R.drawable.poker7, R.drawable.poker8, R.drawable.poker9, R.drawable.poker10, R.drawable.poker11, R.drawable.poker12};
-
-        @Override
-        public Integer getFrontResource() {
-            return FrontImage;
-        }
-
-        @Override
-        public Integer getBackResources(int index) {
-            return BackImage[index];
-        }
-
-        @Override
-        public String getGameName() {
-            return "扑克";
-        }
-
-        @Override
-        public int size() {
-            return BackImage.length;
+    public static boolean installDefaultRes(Context context) {
+        try {
+            String part = context.getFileStreamPath("tmp").getPath();
+            for (int id : mDefaultRes) {
+                String uuid = UUID.randomUUID().toString();
+                new File(part).mkdirs();
+                File tmpFile = new File(part, uuid);
+                writeFile(context.getResources().openRawResource(id), tmpFile);
+                if (!installMod(context, new ZipFile(tmpFile)))
+                    return false;
+            }
+            return true;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
         }
     }
 
 
+    private static boolean installMod(Context context, ZipFile zipFile) {
+        try {
+            if (!testFile(zipFile))
+                return false;
+            String uuid = UUID.randomUUID().toString();
+            String part = context.getFileStreamPath("mod").getPath() + "/" + uuid;
+            new File(part).mkdirs();
+            Enumeration<? extends ZipEntry> entris = zipFile.entries();
+            while (entris.hasMoreElements()) {
+                ZipEntry zipEntry = entris.nextElement();
+                if (zipEntry.isDirectory())
+                    continue;
+                writeFile(zipFile.getInputStream(zipEntry), new File(part, zipEntry.getName()));
+            }
+            zipFile.close();
+        } catch (Exception e) {
+            Log.d("filess", e.getMessage());
+            e.printStackTrace();
+            return false;
+        }
+        return true;
+    }
+
+    private static boolean testFile(ZipFile zipFile) throws IOException {
+        Enumeration<? extends ZipEntry> entris = zipFile.entries();
+        while (entris.hasMoreElements()) {
+            ZipEntry zipEntry = entris.nextElement();
+            if (zipEntry.isDirectory())
+                continue;
+            if (zipEntry.getName().equals("GameConfig.json")) {
+                String str = readTextFile(zipFile.getInputStream(zipEntry));
+                try {
+                    JSONObject json = new JSONObject(str);
+                    return "Card Match".equals(json.getString("for"));
+                } catch (JSONException e) {
+                    return false;
+                }
+            }
+        }
+        return false;
+    }
+
+    private static void writeFile(InputStream input, File outFile) throws IOException {
+        byte[] bytes = new byte[2048];
+        int len;
+        if (outFile.exists())
+            outFile.delete();
+        outFile.createNewFile();
+        try (FileOutputStream out = new FileOutputStream(outFile)) {
+            while ((len = input.read(bytes)) > 0) {
+                out.write(bytes, 0, len);
+            }
+            out.flush();
+            input.close();
+        }
+    }
+
+    private static class GameObserverAdaptor extends BaseGameObserver {
+
+        private final Bitmap mFrontRes;
+        private final Bitmap[] mBackRes;
+
+        public GameObserverAdaptor(Context context, Handler handler, Bitmap mFrontRes, Bitmap[] mBackRes) {
+            super(context, handler);
+            this.mFrontRes = mFrontRes;
+            this.mBackRes = mBackRes;
+        }
+
+        @Override
+        protected int[] setData() {
+            return super.getRandomResourcesIndex(mBackRes.length);
+        }
+
+        @Override
+        protected View[][] makeGameView(int[] gameData) {
+            View[][] views = new View[16][2];
+            for (int i = 0; i < 16; i++) {
+                views[i][0] = getImageView(mFrontRes);
+                views[i][1] = getImageView(mBackRes[gameData[i]]);
+            }
+            return views;
+        }
+
+        private View getImageView(Bitmap res) {
+            ImageView imageView = new ImageView(super.getContext());
+            imageView.setImageBitmap(res);
+            return imageView;
+        }
+    }
 }

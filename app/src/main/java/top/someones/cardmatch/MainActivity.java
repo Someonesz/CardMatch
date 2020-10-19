@@ -2,19 +2,23 @@ package top.someones.cardmatch;
 
 import androidx.appcompat.app.AppCompatActivity;
 import top.someones.cardmatch.core.GameManagement;
-import top.someones.cardmatch.ui.MyImageView;
 import top.someones.cardmatch.ui.TwoActivity;
-import top.someones.cardmatch.ui.ZipActivity;
 
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.widget.ImageSwitcher;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.ListView;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
-
-    MyImageView imageView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -26,20 +30,26 @@ public class MainActivity extends AppCompatActivity {
             file.mkdir();
         }
 
-        GameManagement.addMod(this);
-
-        startActivity(new Intent(this, TwoActivity.class));
-
-        imageView = findViewById(R.id.imageView);
-        imageView.setImageResource(R.drawable.b);
-
-        findViewById(R.id.btn1).setOnClickListener(v -> {
-            imageView.switchImage(R.drawable.b);
+        SharedPreferences spf = getSharedPreferences("Config", Context.MODE_PRIVATE);
+        if (spf.getBoolean("newInstall", true)) {
+            if (GameManagement.installDefaultRes(this)) {
+                SharedPreferences.Editor editor = spf.edit();
+                editor.putBoolean("newInstall", false);
+                editor.apply();
+            }
+        }
+        GameManagement.init(this);
+        List<String> list = new LinkedList<>();
+        for (String str:GameManagement.getAllGameName()){
+            list.add(str);
+        }
+        ListView listView=findViewById(R.id.gameSelect);
+        ArrayAdapter<String> array = new ArrayAdapter<String>(this,android.R.layout.simple_list_item_1,list);
+        listView.setAdapter(array);
+        listView.setOnItemClickListener((parent, view, position, id) -> {
+            startActivity(new Intent(MainActivity.this, TwoActivity.class).putExtra("GameName",(String) parent.getItemAtPosition(position)));
         });
 
-        findViewById(R.id.btn2).setOnClickListener(v -> {
-            imageView.switchImage(R.drawable.c);
-        });
     }
 
     private void deleteFile(File file) {

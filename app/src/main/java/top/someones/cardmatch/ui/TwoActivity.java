@@ -13,6 +13,7 @@ import android.os.Message;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
+import android.widget.Toast;
 
 public class TwoActivity extends AppCompatActivity {
 
@@ -42,10 +43,12 @@ public class TwoActivity extends AppCompatActivity {
         switchers[13] = findViewById(R.id.c14);
         switchers[14] = findViewById(R.id.c15);
         switchers[15] = findViewById(R.id.c16);
-        try {
-            gameObserver = GameManagement.getBean("扑克", this, new GameHandler());
-        } catch (InstantiationException | IllegalAccessException e) {
-            Log.d("qqqqq", e.getMessage());
+
+        gameObserver = GameManagement.getGameObserver(getIntent().getStringExtra("GameName"), this, new GameHandler());
+        if (gameObserver == null) {
+            Toast.makeText(this, "游戏初始化失败", Toast.LENGTH_LONG).show();
+            this.finish();
+            return;
         }
 
         for (int i = 0; i < switchers.length; i++) {

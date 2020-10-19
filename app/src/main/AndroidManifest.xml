@@ -9,7 +9,6 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.CardMatch">
-        <activity android:name=".ui.ZipActivity"></activity>
         <activity android:name=".ui.TwoActivity" />
         <activity android:name=".MainActivity">
             <intent-filter>
