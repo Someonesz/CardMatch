@@ -43,7 +43,7 @@ public class TwoActivity extends AppCompatActivity {
         switchers[14] = findViewById(R.id.c15);
         switchers[15] = findViewById(R.id.c16);
         try {
-            gameObserver = GameManagement.getModBean("24节气", this, new GameHandler());
+            gameObserver = GameManagement.getBean("扑克", this, new GameHandler());
         } catch (InstantiationException | IllegalAccessException e) {
             Log.d("qqqqq", e.getMessage());
         }

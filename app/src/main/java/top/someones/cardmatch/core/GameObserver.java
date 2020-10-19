@@ -13,7 +13,7 @@ public interface GameObserver {
 
     int MAX_VIEW = 16;
 
-    GameObserver initGameObserver(Context context, Handler handler);
+//    GameObserver initGameObserver(Context context, Handler handler);
 
     View[][] newGame();
 

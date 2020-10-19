@@ -11,13 +11,18 @@ import java.util.Random;
 
 public abstract class BaseGameObserver implements GameObserver {
 
-    private Handler mHandler;
-    private Context mContext;
+    private final Handler mHandler;
+    private final Context mContext;
     private final int[] mData = new int[16];
     private int mGameSteps = 0;
     private int mGameProgress = 0;
 
-    protected int getData(int index) {
+    public BaseGameObserver(Context context, Handler handler){
+        this.mContext = context;
+        this.mHandler = handler;
+    }
+
+    private int getData(int index) {
         return mData[index];
     }
 
@@ -25,18 +30,12 @@ public abstract class BaseGameObserver implements GameObserver {
     public View[][] newGame() {
         mGameSteps = 0;
         System.arraycopy(setData(), 0, mData, 0, mData.length);
-        return makeGameView();
+        return makeGameView(mData);
     }
 
     protected abstract int[] setData();
 
-    protected abstract View[][] makeGameView();
-
-    public GameObserver initGameObserver(Context context, Handler handler) {
-        this.mContext = context;
-        this.mHandler = handler;
-        return this;
-    }
+    protected abstract View[][] makeGameView(int[] gameData);
 
     protected Context getContext() {
         return mContext;
@@ -80,9 +79,9 @@ public abstract class BaseGameObserver implements GameObserver {
         }).start();
     }
 
-    protected int[] getRandomImageRes(int dataLength) {
-        List<Integer> one = new ArrayList<>(dataLength);
-        for (int i = 0; i < dataLength; i++) {
+    protected int[] getRandomResourcesIndex(int resLength) {
+        List<Integer> one = new ArrayList<>(resLength);
+        for (int i = 0; i < resLength; i++) {
             one.add(i);
         }
         List<Integer> two = new ArrayList<>(MAX_VIEW);

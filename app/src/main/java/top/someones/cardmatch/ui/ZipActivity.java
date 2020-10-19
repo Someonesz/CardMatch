@@ -2,10 +2,7 @@ package top.someones.cardmatch.ui;
 
 import androidx.appcompat.app.AppCompatActivity;
 import top.someones.cardmatch.R;
-import top.someones.cardmatch.core.ModAdaptor;
 
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.Button;
@@ -17,8 +14,6 @@ import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -41,7 +36,7 @@ public class ZipActivity extends AppCompatActivity {
 
         textView = findViewById(R.id.textView);
         button = findViewById(R.id.button);
-        imageView=findViewById(R.id.imageView2);
+        imageView = findViewById(R.id.imageView2);
 
         button.setOnClickListener(l -> {
             readModFile(getFileStreamPath("Solar.zip"));
@@ -49,29 +44,6 @@ public class ZipActivity extends AppCompatActivity {
 
 
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
     private boolean readModFile(File file) {
