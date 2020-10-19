@@ -56,7 +56,6 @@ public abstract class BaseGameObserver implements GameObserver {
                 Message msg = Message.obtain();
                 msg.what = GAME_WIN;
                 msg.arg1 = getGameSteps();
-                msg.arg2 = b;
                 mHandler.sendMessage(msg);
             }
             return;

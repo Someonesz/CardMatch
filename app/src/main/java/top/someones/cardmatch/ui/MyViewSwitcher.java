@@ -12,7 +12,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import top.someones.cardmatch.R;
 
-
 /**
  * 翻牌子
  * 两个VIEW切换
