@@ -21,6 +21,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -76,15 +78,20 @@ public class GameManagement {
         Bitmap[] backRes;
         try {
             frontRes = BitmapFactory.decodeStream(new FileInputStream(new File(res.getResPath(), res.getFrontResName())));
-            backRes = new Bitmap[res.getBackResLength()];
-            int index = 0;
+            List<Bitmap> bitmaps = new LinkedList<>();
             for (String backResName : res.getBackResName()) {
                 File resFile = new File(res.getResPath(), backResName);
                 if (resFile.isFile()) {
-                    backRes[index] = BitmapFactory.decodeStream(new FileInputStream(resFile));
-                    index++;
+                    Bitmap bitmap = BitmapFactory.decodeFile(res.getResPath() + "/" + backResName);
+                    if (bitmap != null) {
+                        bitmaps.add(bitmap);
+                    }
                 }
             }
+            if (bitmaps.size() < GameObserver.MAX_VIEW / 2)
+                return null;
+            backRes = new Bitmap[bitmaps.size()];
+            bitmaps.toArray(backRes);
         } catch (FileNotFoundException e) {
             return null;
         }

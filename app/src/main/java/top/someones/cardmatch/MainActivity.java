@@ -6,6 +6,7 @@ import top.someones.cardmatch.ui.TwoActivity;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
@@ -27,6 +28,10 @@ public class MainActivity extends AppCompatActivity {
         listView.setOnItemClickListener((parent, view, position, id) -> {
             startActivity(new Intent(MainActivity.this, TwoActivity.class).putExtra("GameName", (String) parent.getItemAtPosition(position)));
         });
+
+    }
+
+    public void selectFile(View v){
 
     }
 
