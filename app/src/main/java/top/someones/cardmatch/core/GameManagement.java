@@ -34,7 +34,7 @@ import top.someones.cardmatch.R;
 public class GameManagement {
 
     private static final Map<String, GameResources> mGameResources = new HashMap<>();
-    private static final int[] mDefaultRes = {R.raw.poker, R.raw.solar, R.raw.food};
+    private static final int[] mDefaultRes = {R.raw.poker, R.raw.food};
     private static boolean mInitialized = false;
 
     private GameManagement() {
@@ -166,6 +166,7 @@ public class GameManagement {
             e.printStackTrace();
             return false;
         }
+        GameManagement.init(context);
         return true;
     }
 

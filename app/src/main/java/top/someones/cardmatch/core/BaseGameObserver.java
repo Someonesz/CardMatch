@@ -82,8 +82,8 @@ public abstract class BaseGameObserver implements GameObserver {
         List<Integer> two = new ArrayList<>(MAX_VIEW);
         Random random = new Random();
         int index;
-        for (int i = 0; i < 8; i++) {
-            index = random.nextInt(MAX_VIEW / 2 - i);
+        for (int i = 0; i < MAX_VIEW / 2; i++) {
+            index = random.nextInt(resLength - i);
             two.add(one.get(index));
             one.remove(index);
         }
