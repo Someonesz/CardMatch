@@ -1,0 +1,19 @@
+{
+    "for": "Card Match",
+    "Mod_Name": "食物",
+    "uuid": "800d9b08-a7df-48f0-ad42-d59211afa380",
+    "version": "1.0",
+    "Author": "Someones",
+    "FrontImageName": "food_front.jpg",
+    "BackImageName": [
+        "food1.jpg",
+        "food2.jpg",
+        "food3.jpg",
+        "food4.jpg",
+        "food5.jpg",
+        "food6.jpg",
+        "food7.jpg",
+        "food8.jpg",
+        "food9.jpg"
+    ]
+}

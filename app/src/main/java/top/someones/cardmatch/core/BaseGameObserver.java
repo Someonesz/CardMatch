@@ -52,9 +52,9 @@ public abstract class BaseGameObserver implements GameObserver {
         if (getData(a) == getData(b)) {
             mHandler.sendEmptyMessage(GameObserver.MATCH_SUCCEED);
             mGameProgress++;
-            if (mGameProgress == MAX_VIEW / 2) {
+            if (mGameProgress == GameObserver.MAX_VIEW / 2) {
                 Message msg = Message.obtain();
-                msg.what = GAME_WIN;
+                msg.what = GameObserver.GAME_WIN;
                 msg.arg1 = getGameSteps();
                 mHandler.sendMessage(msg);
             }
@@ -64,7 +64,7 @@ public abstract class BaseGameObserver implements GameObserver {
             try {
                 Thread.sleep(1500);
                 Message msg = Message.obtain();
-                msg.what = MATCH_FAILED;
+                msg.what = GameObserver.MATCH_FAILED;
                 msg.arg1 = a;
                 msg.arg2 = b;
                 mHandler.sendMessage(msg);
@@ -79,18 +79,18 @@ public abstract class BaseGameObserver implements GameObserver {
         for (int i = 0; i < resLength; i++) {
             one.add(i);
         }
-        List<Integer> two = new ArrayList<>(MAX_VIEW);
+        List<Integer> two = new ArrayList<>(GameObserver.MAX_VIEW);
         Random random = new Random();
         int index;
-        for (int i = 0; i < MAX_VIEW / 2; i++) {
+        for (int i = 0; i < GameObserver.MAX_VIEW / 2; i++) {
             index = random.nextInt(resLength - i);
             two.add(one.get(index));
             one.remove(index);
         }
         two.addAll(two);
-        int[] data = new int[MAX_VIEW];
-        for (int i = 0; i < MAX_VIEW; i++) {
-            index = random.nextInt(MAX_VIEW - i);
+        int[] data = new int[GameObserver.MAX_VIEW];
+        for (int i = 0; i < GameObserver.MAX_VIEW; i++) {
+            index = random.nextInt(GameObserver.MAX_VIEW - i);
             data[i] = two.get(index);
             two.remove(index);
         }

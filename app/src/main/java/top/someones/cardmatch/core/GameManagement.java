@@ -1,6 +1,7 @@
 package top.someones.cardmatch.core;
 
 import android.content.Context;
+import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Handler;
@@ -19,6 +20,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.Collection;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -29,13 +31,11 @@ import java.util.UUID;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
-import top.someones.cardmatch.R;
-
 public class GameManagement {
 
-    private static final Map<String, GameResources> mGameResources = new HashMap<>();
-    private static final int[] mDefaultRes = {R.raw.poker, R.raw.food};
+    private static final Map<String, GameResource> mGameResources = new HashMap<>();
     private static boolean mInitialized = false;
+    private static String DEFAULT_RESOURCE = "DefaultRes";
 
     private GameManagement() {
     }
@@ -51,15 +51,15 @@ public class GameManagement {
             modDirectory.mkdirs();
         } else {
             if (files.length == 0) {
-                installDefaultRes(context);
+                copyDefaultRes(context);
             }
             files = modDirectory.listFiles();
             if (files != null) {
                 for (File file : files) {
                     if (file.isDirectory()) {
-                        GameResources res = getGameRes(file);
+                        GameResource res = getGameRes(file);
                         if (res != null) {
-                            mGameResources.put(res.getGameName(), res);
+                            mGameResources.put(res.getUUID(), res);
                         }
                     }
                 }
@@ -71,7 +71,7 @@ public class GameManagement {
     public static GameObserver getGameObserver(String name, Context context, Handler handler) {
         if (!mInitialized)
             init(context);
-        GameResources res = mGameResources.get(name);
+        GameResource res = mGameResources.get(name);
         if (res == null)
             return null;
         Bitmap frontRes;
@@ -100,13 +100,13 @@ public class GameManagement {
         return null;
     }
 
-    public static Set<String> getAllGameName(Context context) {
+    public static GameResource[] getAllGameRes(Context context) {
         if (!mInitialized)
             init(context);
-        return mGameResources.keySet();
+        return mGameResources.values().toArray(new GameResource[0]);
     }
 
-    private static GameResources getGameRes(File resDirectory) {
+    private static GameResource getGameRes(File resDirectory) {
         try {
             String resPath = resDirectory.getPath();
             File[] files = resDirectory.listFiles();
@@ -115,13 +115,17 @@ public class GameManagement {
                     if (gameConfig.isFile() && gameConfig.getName().equals("GameConfig.json")) {
                         JSONObject config = new JSONObject(readTextFile(new FileInputStream(gameConfig)));
                         String gameName = config.getString("Mod_Name");
+                        String uuid = config.getString("uuid");
+                        String version = config.getString("version");
                         String frontImagePath = config.getString("FrontImageName");
                         JSONArray jarr = config.getJSONArray("BackImageName");
-                        String[] backImageName = new String[jarr.length()];
+                        List<String> backImagesName = new LinkedList<>();
                         for (int i = 0; i < jarr.length(); i++) {
-                            backImageName[i] = jarr.getString(i);
+                            backImagesName.add(jarr.getString(i));
                         }
-                        return new GameResources(gameName, resPath, frontImagePath, backImageName);
+                        if (backImagesName.size() < GameObserver.MAX_VIEW / 2)
+                            return null;
+                        return new GameResource(gameName, uuid, version, resPath, frontImagePath, backImagesName.toArray(new String[0]));
                     }
                 }
             } else {
@@ -132,19 +136,6 @@ public class GameManagement {
             return null;
         }
         return null;
-    }
-
-    private static String readTextFile(InputStream input) throws IOException {
-        StringBuilder sb = new StringBuilder();
-        try (BufferedReader br = new BufferedReader(new InputStreamReader(input))) {
-            String str = br.readLine();
-            while (str != null) {
-                sb.append(str);
-                str = br.readLine();
-            }
-            input.close();
-        }
-        return sb.toString();
     }
 
     public static boolean installMod(Context context, ZipFile zipFile) {
@@ -170,17 +161,23 @@ public class GameManagement {
         return true;
     }
 
-    private static void installDefaultRes(Context context) {
+    private static void copyDefaultRes(Context context) {
         try {
-            File tmpDirectory = context.getFileStreamPath("tmp");
-            if (!tmpDirectory.exists())
-                tmpDirectory.mkdirs();
-            for (int id : mDefaultRes) {
-                String uuid = UUID.randomUUID().toString();
-                File tmpFile = new File(tmpDirectory, uuid);
-                writeFile(context.getResources().openRawResource(id), tmpFile);
-                if (!installMod(context, new ZipFile(tmpFile)))
-                    return;
+            AssetManager assetManager = context.getAssets();
+            String[] resDirectoriesName = assetManager.list("DefaultRes");
+            File modDirectory = context.getFileStreamPath("mod");
+            for (String resDirectoryName : resDirectoriesName) {
+                try {
+                    File resDirectory = new File(modDirectory, resDirectoryName);
+                    resDirectory.mkdirs();
+                    String[] resFilesName = assetManager.list("DefaultRes" + "/" + resDirectoryName);
+                    for (String resFileName : resFilesName) {
+                        File resFile = new File(modDirectory + "/" + resDirectoryName + "/" + resFileName);
+                        resFile.createNewFile();
+                        writeFile(assetManager.open("DefaultRes" + "/" + resDirectoryName + "/" + resFileName), resFile);
+                    }
+                } catch (IOException ignored) {
+                }
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -204,6 +201,19 @@ public class GameManagement {
             }
         }
         return false;
+    }
+
+    private static String readTextFile(InputStream input) throws IOException {
+        StringBuilder sb = new StringBuilder();
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(input))) {
+            String str = br.readLine();
+            while (str != null) {
+                sb.append(str);
+                str = br.readLine();
+            }
+            input.close();
+        }
+        return sb.toString();
     }
 
     private static void writeFile(InputStream input, File outFile) throws IOException {
