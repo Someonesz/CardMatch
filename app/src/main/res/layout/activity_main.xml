@@ -6,8 +6,8 @@
     android:orientation="vertical"
     tools:context=".MainActivity">
 
-    <ListView
-        android:id="@+id/gameSelect"
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/modList1"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1" />

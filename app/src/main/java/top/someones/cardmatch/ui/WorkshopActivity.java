@@ -10,7 +10,7 @@ import okhttp3.Request;
 import okhttp3.Response;
 import top.someones.cardmatch.R;
 import top.someones.cardmatch.core.GameManagement;
-import top.someones.cardmatch.entity.GameResource;
+import top.someones.cardmatch.core.ImageCache;
 import top.someones.cardmatch.entity.Mod;
 
 import android.app.AlertDialog;
@@ -22,12 +22,11 @@ import android.util.Log;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 public class WorkshopActivity extends AppCompatActivity {
 
-    RecyclerView modList;
+    private RecyclerView modList;
+    private ProgressDialog loading;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,15 +35,10 @@ public class WorkshopActivity extends AppCompatActivity {
 
         modList = findViewById(R.id.modList);
         modList.setLayoutManager(new LinearLayoutManager(this));
+        loading = ProgressDialog.show(this, "请稍后", "正在连接到创意工坊");
         Intent intent = new Intent(WorkshopActivity.this, ModInfoActivity.class);
 
-        GameResource[] res = GameManagement.getAllGameRes(this);
-        List<Mod> mods = new ArrayList<>(res.length);
-        for (GameResource game : res) {
-            mods.add(new Mod(game.getUUID(), game.getName(), game.getCover(), game.getAuthor(), game.getVersion()));
-        }
-
-        final ProgressDialog progress = ProgressDialog.show(this, "提示", "正在连接网络");
+        Mod[] mods = GameManagement.getMods(this);
 
         Request request = new Request.Builder().get().url("https:someones.top").build();
         Call call = new OkHttpClient().newCall(request);
@@ -64,15 +58,20 @@ public class WorkshopActivity extends AppCompatActivity {
 
             @Override
             public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
-                progress.dismiss();
                 Log.d("net!", response.code() + "");
                 runOnUiThread(() -> {
                     modList.setAdapter(new ModAdapter(mods, v -> {
                         startActivity(intent.putExtra("dd", "ds"));
                     }));
-                    progress.dismiss();
+                    loading.dismiss();
                 });
             }
         });
+    }
+
+    @Override
+    protected void onDestroy() {
+        ImageCache.cleanWorkshopCache();
+        super.onDestroy();
     }
 }

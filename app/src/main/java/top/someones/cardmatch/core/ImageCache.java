@@ -2,37 +2,29 @@ package top.someones.cardmatch.core;
 
 import android.graphics.Bitmap;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class ImageCache {
-    private static final Map<String, Bitmap> mBaseCache = new HashMap<>();
-    private static final Map<String, Bitmap> mWorkshopCache = new HashMap<>();
+    private static final Map<String, Bitmap> mBaseCache = new ConcurrentHashMap<>();
+    private static final Map<String, Bitmap> mWorkshopCache = new ConcurrentHashMap<>();
 
-    public Bitmap getCache(String uuid) {
+    public static Bitmap getCache(String uuid) {
         Bitmap bitmap = mBaseCache.get(uuid);
         if (bitmap != null)
             return bitmap;
-        synchronized (mWorkshopCache) {
-            return mWorkshopCache.get(uuid);
-        }
+        return mWorkshopCache.get(uuid);
     }
 
-    public void setBaseCache(String uuid, Bitmap bitmap) {
-        synchronized (mBaseCache) {
-            mBaseCache.put(uuid, bitmap);
-        }
+    public static void addBaseCache(String uuid, Bitmap bitmap) {
+        mBaseCache.put(uuid, bitmap);
     }
 
-    public void setWorkshopCache(String uuid, Bitmap bitmap) {
-        synchronized (mWorkshopCache) {
-            mWorkshopCache.put(uuid, bitmap);
-        }
+    public static void addWorkshopCache(String uuid, Bitmap bitmap) {
+        mWorkshopCache.put(uuid, bitmap);
     }
 
-    public void cleanWorkshopCache() {
-        synchronized (mWorkshopCache) {
-            mWorkshopCache.clear();
-        }
+    public static void cleanWorkshopCache() {
+        mWorkshopCache.clear();
     }
 }

@@ -4,8 +4,11 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 import top.someones.cardmatch.core.GameManagement;
 import top.someones.cardmatch.entity.GameResource;
+import top.someones.cardmatch.ui.ModAdapter;
 import top.someones.cardmatch.ui.PermissionsManagement;
 import top.someones.cardmatch.ui.TwoActivity;
 import top.someones.cardmatch.ui.WorkshopActivity;
@@ -22,7 +25,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
-import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -34,21 +36,22 @@ public class MainActivity extends AppCompatActivity {
 
     private static final int REQUEST_STORAGE_PERMISSION = 90;
     private static final int REQUEST_READ_ZIP_FILE = 91;
-
     private static final String[] PERMISSIONS = {"android.permission.READ_EXTERNAL_STORAGE"};
 
-    private ListView listView;
+    private Intent intent;
+    private RecyclerView modList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        listView = findViewById(R.id.gameSelect);
-        listView.setAdapter(new ListAdapter(this, GameManagement.getAllGameRes(this)));
-        listView.setOnItemClickListener((parent, view, position, id) -> {
-            startActivity(new Intent(MainActivity.this, TwoActivity.class).putExtra("GameName", ((GameResource) parent.getItemAtPosition(position)).getUUID()));
-        });
+        intent = new Intent(this, TwoActivity.class);
+        modList = findViewById(R.id.modList1);
+        modList.setLayoutManager(new LinearLayoutManager(this));
+        modList.setAdapter(new ModAdapter(GameManagement.getMods(this), mod1 -> {
+            startActivity(intent.putExtra("uuid", mod1.getUUID()));
+        }));
 
         startActivity(new Intent(MainActivity.this, WorkshopActivity.class));
     }
@@ -91,7 +94,9 @@ public class MainActivity extends AppCompatActivity {
                     Log.d("InstallMod", path);
                     ZipFile zipFile = new ZipFile(path);
                     Toast.makeText(this, "Mod安装：" + GameManagement.installMod(this, zipFile), Toast.LENGTH_SHORT).show();
-                    listView.setAdapter(new ListAdapter(this, GameManagement.getAllGameRes(this)));
+                    modList.setAdapter(new ModAdapter(GameManagement.getMods(this), mod -> {
+                        startActivity(intent.putExtra("uuid", mod.getUUID()));
+                    }));
                 } catch (IOException e) {
                     e.printStackTrace();
                     Log.d("InstallMod", e.getMessage());

@@ -21,20 +21,21 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Enumeration;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 import top.someones.cardmatch.R;
 import top.someones.cardmatch.entity.GameResource;
+import top.someones.cardmatch.entity.Mod;
 
 public class GameManagement {
 
-    private static final Map<String, GameResource> mGameResources = new HashMap<>();
+    private static final Map<String, GameResource> mGameResources = new ConcurrentHashMap<>();
     private static boolean mInitialized = false;
     private static Bitmap mDefaultBitmap;
 
@@ -108,41 +109,53 @@ public class GameManagement {
         return mGameResources.values().toArray(new GameResource[0]);
     }
 
+    public static Mod[] getMods(Context context) {
+        if (!mInitialized)
+            init(context);
+        Mod[] mods = new Mod[mGameResources.size()];
+        int i = 0;
+        for (GameResource next : mGameResources.values()) {
+            mods[i++] = new Mod(next.getUUID(), next.getName(), next.getCover(), next.getAuthor(), next.getVersion());
+        }
+        return mods;
+    }
+
     private static GameResource getGameRes(File resDirectory) {
         try {
             String resPath = resDirectory.getPath();
-            File[] files = resDirectory.listFiles();
-            if (files != null) {
-                for (File gameConfig : files) {
-                    if (gameConfig.isFile() && gameConfig.getName().equals("GameConfig.json")) {
-                        JSONObject config = new JSONObject(readTextFile(new FileInputStream(gameConfig)));
-                        String uuid = config.getString("uuid");
-                        String name = config.getString("Mod_Name");
-                        String author = config.getString("Author");
-                        Double version = config.getDouble("version");
-                        String frontImagePath = config.getString("FrontImageName");
-                        JSONArray jarr = config.getJSONArray("BackImageName");
-                        List<String> backImagesName = new LinkedList<>();
-                        for (int i = 0; i < jarr.length(); i++) {
-                            backImagesName.add(jarr.getString(i));
-                        }
-                        if (backImagesName.size() < GameObserver.MAX_VIEW / 2)
-                            return null;
-                        Bitmap bitmap = BitmapFactory.decodeFile(resPath + "/" + backImagesName.get(new Random().nextInt(backImagesName.size())));
-                        if (bitmap == null) {
-                            bitmap = mDefaultBitmap;
-                        }
-                        return new GameResource(uuid, name, author, version, resPath, bitmap, frontImagePath, backImagesName.toArray(new String[0]));
-                    }
-                }
-            } else {
+            File gameConfig = new File(resDirectory.getPath() + "/" + "GameConfig.json");
+            if (!gameConfig.isFile())
                 return null;
+            JSONObject config = new JSONObject(readTextFile(new FileInputStream(gameConfig)));
+            String uuid = config.getString("uuid");
+            String name = config.getString("Mod_Name");
+            String author = config.getString("Author");
+            Double version = config.getDouble("version");
+            String frontImagePath = config.getString("FrontImageName");
+            JSONArray jarr = config.getJSONArray("BackImageName");
+            List<String> backImagesName = new LinkedList<>();
+            for (int i = 0; i < jarr.length(); i++) {
+                backImagesName.add(jarr.getString(i));
             }
+            if (backImagesName.size() < GameObserver.MAX_VIEW / 2)
+                return null;
+            Bitmap bitmap = ImageCache.getCache(uuid);
+            if (bitmap == null) {
+                if (config.has("cover")) {
+                    bitmap = BitmapFactory.decodeFile(resPath + "/" + config.getString("cover"));
+                } else {
+                    bitmap = BitmapFactory.decodeFile(resPath + "/" + backImagesName.get(new Random().nextInt(backImagesName.size())));
+                }
+                if (bitmap == null) {
+                    bitmap = mDefaultBitmap;
+                }
+                ImageCache.addBaseCache(uuid, bitmap);
+            }
+            return new GameResource(uuid, name, author, version, resPath, bitmap, frontImagePath, backImagesName.toArray(new String[0]));
         } catch (Exception e) {
             e.printStackTrace();
             return null;
         }
-        return null;
     }
 
     public static boolean installMod(Context context, ZipFile zipFile) {

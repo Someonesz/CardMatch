@@ -43,7 +43,7 @@ public class TwoActivity extends AppCompatActivity {
         switchers[14] = findViewById(R.id.c15);
         switchers[15] = findViewById(R.id.c16);
 
-        gameObserver = GameManagement.getGameObserver(getIntent().getStringExtra("GameName"), this, new GameHandler());
+        gameObserver = GameManagement.getGameObserver(getIntent().getStringExtra("uuid"), this, new GameHandler());
         if (gameObserver == null) {
             Toast.makeText(this, "游戏初始化失败", Toast.LENGTH_LONG).show();
             this.finish();

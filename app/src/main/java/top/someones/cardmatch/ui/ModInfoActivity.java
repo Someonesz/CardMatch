@@ -13,7 +13,5 @@ public class ModInfoActivity extends AppCompatActivity {
         setContentView(R.layout.activity_mod_info);
 
 
-
-
     }
 }
