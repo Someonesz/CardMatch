@@ -10,7 +10,7 @@
         android:id="@+id/gameSelect"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"/>
+        android:layout_weight="1" />
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -21,7 +21,10 @@
             android:layout_height="wrap_content"
             android:onClick="selectFile" />
 
-
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="jump" />
     </LinearLayout>
 
 </LinearLayout>

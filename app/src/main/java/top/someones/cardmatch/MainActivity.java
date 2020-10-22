@@ -3,10 +3,10 @@ package top.someones.cardmatch;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
 
 import top.someones.cardmatch.core.GameManagement;
-import top.someones.cardmatch.core.GameResource;
+import top.someones.cardmatch.entity.GameResource;
+import top.someones.cardmatch.ui.CreativeWorkshopActivity;
 import top.someones.cardmatch.ui.PermissionsManagement;
 import top.someones.cardmatch.ui.TwoActivity;
 
@@ -21,7 +21,6 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -29,9 +28,6 @@ import android.widget.Toast;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.UUID;
 import java.util.zip.ZipFile;
 
 public class MainActivity extends AppCompatActivity {
@@ -53,6 +49,12 @@ public class MainActivity extends AppCompatActivity {
         listView.setOnItemClickListener((parent, view, position, id) -> {
             startActivity(new Intent(MainActivity.this, TwoActivity.class).putExtra("GameName", ((GameResource) parent.getItemAtPosition(position)).getUUID()));
         });
+
+        startActivity(new Intent(MainActivity.this, CreativeWorkshopActivity.class));
+    }
+
+    public void jump(View v) {
+        startActivity(new Intent(MainActivity.this, CreativeWorkshopActivity.class));
     }
 
     public void selectFile(View v) {
@@ -168,7 +170,7 @@ public class MainActivity extends AppCompatActivity {
                 view = convertView;
             }
             text = (TextView) view;
-            text.setText(gamesResource[position].getGameName());
+            text.setText(gamesResource[position].getName());
             return text;
         }
     }

@@ -2,7 +2,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="top.someones.cardmatch">
 
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
 
     <application
         android:allowBackup="true"
@@ -11,6 +12,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.CardMatch">
+        <activity android:name=".ui.CreativeWorkshopActivity" android:theme="@style/AppThemes" />
         <activity android:name=".ui.TwoActivity" />
         <activity android:name=".MainActivity">
             <intent-filter>

@@ -20,27 +20,29 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.Collection;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import java.util.Random;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
+
+import top.someones.cardmatch.R;
+import top.someones.cardmatch.entity.GameResource;
 
 public class GameManagement {
 
     private static final Map<String, GameResource> mGameResources = new HashMap<>();
     private static boolean mInitialized = false;
-    private static String DEFAULT_RESOURCE = "DefaultRes";
+    private static Bitmap mDefaultBitmap;
 
     private GameManagement() {
     }
 
     public static void init(Context context) {
+        mDefaultBitmap = BitmapFactory.decodeResource(context.getResources(), R.drawable.error);
         File modDirectory = context.getFileStreamPath("mod");
         if (!modDirectory.exists()) {
             modDirectory.mkdirs();
@@ -114,8 +116,9 @@ public class GameManagement {
                 for (File gameConfig : files) {
                     if (gameConfig.isFile() && gameConfig.getName().equals("GameConfig.json")) {
                         JSONObject config = new JSONObject(readTextFile(new FileInputStream(gameConfig)));
-                        String gameName = config.getString("Mod_Name");
                         String uuid = config.getString("uuid");
+                        String name = config.getString("Mod_Name");
+                        String author = config.getString("Author");
                         String version = config.getString("version");
                         String frontImagePath = config.getString("FrontImageName");
                         JSONArray jarr = config.getJSONArray("BackImageName");
@@ -125,7 +128,11 @@ public class GameManagement {
                         }
                         if (backImagesName.size() < GameObserver.MAX_VIEW / 2)
                             return null;
-                        return new GameResource(gameName, uuid, version, resPath, frontImagePath, backImagesName.toArray(new String[0]));
+                        Bitmap bitmap = BitmapFactory.decodeFile(resPath + "/" + backImagesName.get(new Random().nextInt(backImagesName.size())));
+                        if (bitmap == null) {
+                            bitmap = mDefaultBitmap;
+                        }
+                        return new GameResource(uuid, name, author, version, resPath, bitmap, frontImagePath, backImagesName.toArray(new String[0]));
                     }
                 }
             } else {
@@ -140,11 +147,16 @@ public class GameManagement {
 
     public static boolean installMod(Context context, ZipFile zipFile) {
         try {
-            if (!testFile(zipFile))
+            String uuid = testFile(zipFile);
+            if (uuid == null)
                 return false;
-            String uuid = UUID.randomUUID().toString();
             String part = context.getFileStreamPath("mod").getPath() + "/" + uuid;
-            new File(part).mkdirs();
+            File modDirectory = new File(part);
+            if (modDirectory.isDirectory()) {
+                deleteFile(modDirectory);
+            }
+            if (!modDirectory.mkdirs())
+                return false;
             Enumeration<? extends ZipEntry> entris = zipFile.entries();
             while (entris.hasMoreElements()) {
                 ZipEntry zipEntry = entris.nextElement();
@@ -184,7 +196,7 @@ public class GameManagement {
         }
     }
 
-    private static boolean testFile(ZipFile zipFile) throws IOException {
+    private static String testFile(ZipFile zipFile) throws IOException {
         Enumeration<? extends ZipEntry> entries = zipFile.entries();
         while (entries.hasMoreElements()) {
             ZipEntry zipEntry = entries.nextElement();
@@ -194,13 +206,16 @@ public class GameManagement {
                 String str = readTextFile(zipFile.getInputStream(zipEntry));
                 try {
                     JSONObject json = new JSONObject(str);
-                    return "Card Match".equals(json.getString("for"));
+                    if ("Card Match".equals(json.getString("for")) && json.has("Mod_Name") && json.has("Author") && json.has("FrontImageName") && json.has("BackImageName")) {
+                        return json.getString("uuid");
+                    } else
+                        return null;
                 } catch (JSONException e) {
-                    return false;
+                    return null;
                 }
             }
         }
-        return false;
+        return null;
     }
 
     private static String readTextFile(InputStream input) throws IOException {
@@ -229,6 +244,18 @@ public class GameManagement {
             out.flush();
             input.close();
         }
+    }
+
+    private static void deleteFile(File file) {
+        if (!file.exists())
+            return;
+        if (file.isDirectory()) {
+            for (File tmpFile : file.listFiles())
+                if (tmpFile.isDirectory()) {
+                    deleteFile(tmpFile);
+                } else tmpFile.delete();
+        }
+        file.delete();
     }
 
     private static class GameObserverAdaptor extends BaseGameObserver {
