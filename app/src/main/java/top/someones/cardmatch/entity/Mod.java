@@ -7,10 +7,10 @@ public class Mod {
     private final String name;
     private final Bitmap image;
     private final String author;
-    private final String version;
+    private final Double version;
 
 
-    public Mod(String uuid, String name, Bitmap image, String author, String version) {
+    public Mod(String uuid, String name, Bitmap image, String author, Double version) {
         UUID = uuid;
         this.name = name;
         this.image = image;
@@ -34,7 +34,7 @@ public class Mod {
         return author;
     }
 
-    public String getVersion() {
+    public Double getVersion() {
         return version;
     }
 }

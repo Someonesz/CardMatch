@@ -7,19 +7,19 @@ public class GameResource {
     private final String UUID;
     private final String name;
     private final String author;
-    private final String version;
+    private final Double version;
     private final String resPath;
-    private final Bitmap indexRes;
+    private final Bitmap cover;
     private final String frontResName;
     private final String[] backResName;
 
-    public GameResource(String uuid, String name, String author, String version, String resPath, Bitmap indexRes, String frontResName, String[] backResName) {
+    public GameResource(String uuid, String name, String author, Double version, String resPath, Bitmap cover, String frontResName, String[] backResName) {
         UUID = uuid;
         this.name = name;
         this.author = author;
         this.version = version;
         this.resPath = resPath;
-        this.indexRes = indexRes;
+        this.cover = cover;
         this.frontResName = frontResName;
         this.backResName = backResName;
     }
@@ -40,7 +40,7 @@ public class GameResource {
         return UUID;
     }
 
-    public String getVersion() {
+    public Double getVersion() {
         return version;
     }
 
@@ -52,7 +52,7 @@ public class GameResource {
         return backResName;
     }
 
-    public Bitmap getIndexRes() {
-        return indexRes;
+    public Bitmap getCover() {
+        return cover;
     }
 }

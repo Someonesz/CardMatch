@@ -119,7 +119,7 @@ public class GameManagement {
                         String uuid = config.getString("uuid");
                         String name = config.getString("Mod_Name");
                         String author = config.getString("Author");
-                        String version = config.getString("version");
+                        Double version = config.getDouble("version");
                         String frontImagePath = config.getString("FrontImageName");
                         JSONArray jarr = config.getJSONArray("BackImageName");
                         List<String> backImagesName = new LinkedList<>();

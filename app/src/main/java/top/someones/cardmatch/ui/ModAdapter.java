@@ -16,18 +16,26 @@ import top.someones.cardmatch.entity.Mod;;
 public class ModAdapter extends RecyclerView.Adapter<ModAdapter.ViewHolder> {
 
     private final List<Mod> mModList;
+    private final View.OnClickListener mOnClickListener;
 
-    public ModAdapter(List<Mod> mModList) {
-        this.mModList = mModList;
+    public ModAdapter(List<Mod> modList) {
+        this.mModList = modList;
+        this.mOnClickListener = null;
     }
 
+    public ModAdapter(List<Mod> modList, View.OnClickListener onClickListener) {
+        this.mModList = modList;
+        this.mOnClickListener = onClickListener;
+    }
 
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.mod_info_layout, parent, false);
-        ModAdapter.ViewHolder holder = new ModAdapter.ViewHolder(view);
-        return holder;
+        if (mOnClickListener!=null){
+            view.setOnClickListener(mOnClickListener);
+        }
+        return new ViewHolder(view);
     }
 
     @Override
@@ -37,6 +45,10 @@ public class ModAdapter extends RecyclerView.Adapter<ModAdapter.ViewHolder> {
         holder.modName.setText(mod.getName());
         holder.modAuthor.setText("作者:" + mod.getAuthor());
         holder.modVersion.setText("版本:" + mod.getVersion());
+    }
+
+    public List<Mod> getModList() {
+        return mModList;
     }
 
     @Override
@@ -57,4 +69,8 @@ public class ModAdapter extends RecyclerView.Adapter<ModAdapter.ViewHolder> {
         }
 
     }
+}
+
+interface ModOnClickListener {
+    void onClick(int index);
 }

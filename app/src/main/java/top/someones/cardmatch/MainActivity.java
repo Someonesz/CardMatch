@@ -6,9 +6,9 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import top.someones.cardmatch.core.GameManagement;
 import top.someones.cardmatch.entity.GameResource;
-import top.someones.cardmatch.ui.CreativeWorkshopActivity;
 import top.someones.cardmatch.ui.PermissionsManagement;
 import top.someones.cardmatch.ui.TwoActivity;
+import top.someones.cardmatch.ui.WorkshopActivity;
 
 import android.app.Activity;
 import android.content.Context;
@@ -50,11 +50,11 @@ public class MainActivity extends AppCompatActivity {
             startActivity(new Intent(MainActivity.this, TwoActivity.class).putExtra("GameName", ((GameResource) parent.getItemAtPosition(position)).getUUID()));
         });
 
-        startActivity(new Intent(MainActivity.this, CreativeWorkshopActivity.class));
+        startActivity(new Intent(MainActivity.this, WorkshopActivity.class));
     }
 
     public void jump(View v) {
-        startActivity(new Intent(MainActivity.this, CreativeWorkshopActivity.class));
+        startActivity(new Intent(MainActivity.this, WorkshopActivity.class));
     }
 
     public void selectFile(View v) {

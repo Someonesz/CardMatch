@@ -12,7 +12,12 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.CardMatch">
-        <activity android:name=".ui.CreativeWorkshopActivity" android:theme="@style/AppThemes" />
+        <activity
+            android:name=".ui.WorkshopActivity"
+            android:theme="@style/AppThemes" />
+        <activity
+            android:name=".ui.ModInfoActivity"
+            android:theme="@style/AppThemes" />
         <activity android:name=".ui.TwoActivity" />
         <activity android:name=".MainActivity">
             <intent-filter>
