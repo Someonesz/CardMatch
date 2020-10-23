@@ -7,6 +7,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.os.Build;
 import android.os.Handler;
 import android.view.View;
 import android.widget.ImageView;
@@ -23,6 +24,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Enumeration;
 import java.util.LinkedList;
 import java.util.List;
@@ -30,6 +33,7 @@ import java.util.Random;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
+import androidx.annotation.RequiresApi;
 import top.someones.cardmatch.R;
 import top.someones.cardmatch.entity.Mod;
 
@@ -75,7 +79,7 @@ public class GameManagement {
     }
 
     public static void installMod(Context context, File modFile) throws Exception {
-        ZipFile zipFile = new ZipFile(modFile);
+        ZipFile zipFile = getZipFile(modFile);
         JSONObject config = testFile(zipFile);
         if (config == null)
             throw new Exception("读取配置文件失败");
@@ -131,6 +135,30 @@ public class GameManagement {
         }
     }
 
+    /**
+     * zip编码检查
+     * 临时使用,后续使用 Apache Commons Compress™ 处理
+     *
+     * @param zipFile zip文件
+     * @return 转换后的zip
+     * @throws IOException 文件不是一个zip文件
+     */
+    private static ZipFile getZipFile(File zipFile) throws IOException {
+        ZipFile zip = new ZipFile(zipFile, StandardCharsets.UTF_8);
+        Enumeration<? extends ZipEntry> entries = zip.entries();
+        try {
+            while (entries.hasMoreElements()) {
+                entries.nextElement();
+            }
+            zip.close();
+            zip = new ZipFile(zipFile, StandardCharsets.UTF_8);
+            return zip;
+        } catch (Exception e) {
+            zip = new ZipFile(zipFile, Charset.forName("GBK"));
+            return zip;
+        }
+    }
+
     public static double getModVersion(Context context, String uuid) {
         try (SQLiteOpenHelper helper = getSQLiteOpenHelper(context)) {
             SQLiteDatabase db = helper.getReadableDatabase();
@@ -161,7 +189,10 @@ public class GameManagement {
                     String resPath = cursor.getString(cursor.getColumnIndex("ResPath"));
                     Bitmap bitmap = ImageCache.getCache(uuid);
                     if (bitmap == null) {
-                        bitmap = BitmapFactory.decodeFile(resPath + "/" + "cover.jpg");
+                        bitmap = BitmapFactory.decodeFile(resPath + "/" + "cover.png");
+                        if (bitmap == null) {
+                            bitmap = BitmapFactory.decodeFile(resPath + "/" + "cover.jpg");
+                        }
                         if (bitmap == null) {
                             String backRes = cursor.getString(cursor.getColumnIndex("BackRes"));
                             String[] subString = backRes.split(":");
@@ -302,7 +333,7 @@ public class GameManagement {
 
     private static final class SQL {
         private static final String ADD_MOD = "INSERT INTO Resources (uuid,Name,Author,Show,Version,ResPath,FrontRes,BackRes) VALUES (?,?,?,?,?,?,?,?)";
-        private static final String SELECT_ALL_MOD = "SELECT uuid,Name,Author,Show,Version,ResPath FROM Resources ORDER BY Weight DESC";
+        private static final String SELECT_ALL_MOD = "SELECT uuid,Name,Author,Show,Version,ResPath,BackRes FROM Resources ORDER BY Weight DESC";
         private static final String DELETE_MOD = "DELETE FROM Resources WHERE UUID = ?";
         private static final String FIND_MOD_VERSION = "SELECT Version FROM Resources WHERE uuid = ?";
         private static final String INIT_GAME = "SELECT Name,Author,Show,Version,ResPath,FrontRes,BackRes FROM Resources WHERE uuid = ?";

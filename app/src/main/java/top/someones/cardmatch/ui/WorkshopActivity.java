@@ -26,7 +26,7 @@ import org.json.JSONObject;
 import java.io.IOException;
 
 public class WorkshopActivity extends AppCompatActivity {
-    private static final String DOMAIN = "http://192.168.3.14:8080/CardMatchService/";
+    private static final String DOMAIN = "http://192.168.43.50:8080/CardMatchService/";
     private OkHttpClient httpClient;
     private RecyclerView modList;
     private ProgressDialog loading;
@@ -87,7 +87,7 @@ public class WorkshopActivity extends AppCompatActivity {
         String uuid = json.getString("UUID");
         Bitmap bitmap = ImageCache.getCache(uuid);
         if (bitmap == null) {
-            Call imageCall = httpClient.newCall(new Request.Builder().get().url(DOMAIN + "GetImgBinServlet" + uuid).build());
+            Call imageCall = httpClient.newCall(new Request.Builder().get().url(DOMAIN + "GetImgBinServlet?uuid=" + uuid).build());
             Response imageResponse = imageCall.execute();
             bitmap = BitmapFactory.decodeStream(imageResponse.body().byteStream());
             if (bitmap != null) {
