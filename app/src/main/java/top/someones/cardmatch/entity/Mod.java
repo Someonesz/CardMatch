@@ -10,15 +10,6 @@ public class Mod {
     private final Double version;
     private final String show;
 
-    public Mod(String uuid, String name, Bitmap image, String author, Double version) {
-        UUID = uuid;
-        this.name = name;
-        this.image = image;
-        this.author = author;
-        this.version = version;
-        this.show = null;
-    }
-
     public Mod(String uuid, String name, Bitmap image, String author, Double version, String show) {
         UUID = uuid;
         this.name = name;

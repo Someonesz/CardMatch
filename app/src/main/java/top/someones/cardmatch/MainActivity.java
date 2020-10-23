@@ -7,30 +7,24 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import top.someones.cardmatch.core.GameManagement;
-import top.someones.cardmatch.entity.GameResource;
+import top.someones.cardmatch.entity.Mod;
 import top.someones.cardmatch.ui.ModAdapter;
 import top.someones.cardmatch.ui.PermissionsManagement;
 import top.someones.cardmatch.ui.TwoActivity;
 import top.someones.cardmatch.ui.WorkshopActivity;
 
 import android.app.Activity;
-import android.content.Context;
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.BaseAdapter;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.File;
-import java.io.IOException;
-import java.util.zip.ZipFile;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -39,6 +33,7 @@ public class MainActivity extends AppCompatActivity {
     private static final String[] PERMISSIONS = {"android.permission.READ_EXTERNAL_STORAGE"};
 
     private Intent intent;
+    private ProgressDialog loading;
     private RecyclerView modList;
 
     @Override
@@ -46,14 +41,24 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        intent = new Intent(this, TwoActivity.class);
+        loading = ProgressDialog.show(this, "请稍后", "正在加载数据");
         modList = findViewById(R.id.modList1);
+        intent = new Intent(this, TwoActivity.class);
+        new Thread(() -> {
+            try {
+                Mod[] mods = GameManagement.getMods(this);
+                runOnUiThread(() -> {
+                    try {
+                        modList.setAdapter(new ModAdapter(mods, mod -> startActivity(intent.putExtra("uuid", mod.getUUID()))));
+                    } catch (Exception ignored) {
+                    }
+                });
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            loading.dismiss();
+        }).start();
         modList.setLayoutManager(new LinearLayoutManager(this));
-        modList.setAdapter(new ModAdapter(GameManagement.getMods(this), mod1 -> {
-            startActivity(intent.putExtra("uuid", mod1.getUUID()));
-        }));
-
-        startActivity(new Intent(MainActivity.this, WorkshopActivity.class));
     }
 
     public void jump(View v) {
@@ -74,12 +79,15 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         if (requestCode == REQUEST_STORAGE_PERMISSION) {
+            boolean hasPermissions = true;
             for (int result : grantResults) {
-                if (result != PackageManager.PERMISSION_GRANTED)
+                if (result != PackageManager.PERMISSION_GRANTED) {
+                    hasPermissions = false;
                     Toast.makeText(this, "没有权限", Toast.LENGTH_SHORT).show();
-                return;
+                }
             }
-            selectFile(null);
+            if (hasPermissions)
+                selectFile(null);
         }
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
@@ -89,19 +97,28 @@ public class MainActivity extends AppCompatActivity {
         if (requestCode == REQUEST_READ_ZIP_FILE && resultCode == Activity.RESULT_OK && data != null) {
             Uri uri = data.getData();
             if (uri != null) {
+                String path = getRealPath(uri.getPath());
+                Log.d("InstallMod", path);
                 try {
-                    String path = getRealPath(uri.getPath());
-                    Log.d("InstallMod", path);
-                    ZipFile zipFile = new ZipFile(path);
-                    Toast.makeText(this, "Mod安装：" + GameManagement.installMod(this, zipFile), Toast.LENGTH_SHORT).show();
-                    modList.setAdapter(new ModAdapter(GameManagement.getMods(this), mod -> {
-                        startActivity(intent.putExtra("uuid", mod.getUUID()));
-                    }));
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    Log.d("InstallMod", e.getMessage());
-                    Toast.makeText(this, "错误：" + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    GameManagement.installMod(this, new File(path));
+                    Toast.makeText(this, "Mod安装成功", Toast.LENGTH_SHORT).show();
+                } catch (Exception e) {
+                    Toast.makeText(this, "Mod安装失败：" + e.getMessage(), Toast.LENGTH_SHORT).show();
                 }
+                new Thread(() -> {
+                    try {
+                        Mod[] mods = GameManagement.getMods(this);
+                        runOnUiThread(() -> {
+                            try {
+                                modList.setAdapter(new ModAdapter(mods, mod -> startActivity(intent.putExtra("uuid", mod.getUUID()))));
+                            } catch (Exception ignored) {
+                            }
+                        });
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                    loading.dismiss();
+                }).start();
             }
         }
         super.onActivityResult(requestCode, resultCode, data);
@@ -139,45 +156,5 @@ public class MainActivity extends AppCompatActivity {
         file.delete();
     }
 
-    private static class ListAdapter extends BaseAdapter {
-
-        private final GameResource[] gamesResource;
-        private final LayoutInflater mInflater;
-
-        public ListAdapter(Context context, GameResource[] gamesResource) {
-            mInflater = LayoutInflater.from(context);
-            this.gamesResource = gamesResource;
-        }
-
-        @Override
-        public int getCount() {
-            return gamesResource.length;
-        }
-
-        @Override
-        public Object getItem(int position) {
-            return gamesResource[position];
-        }
-
-        @Override
-        public long getItemId(int position) {
-            return position;
-        }
-
-        @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
-            final View view;
-            final TextView text;
-
-            if (convertView == null) {
-                view = mInflater.inflate(android.R.layout.simple_list_item_1, parent, false);
-            } else {
-                view = convertView;
-            }
-            text = (TextView) view;
-            text.setText(gamesResource[position].getName());
-            return text;
-        }
-    }
 }
 

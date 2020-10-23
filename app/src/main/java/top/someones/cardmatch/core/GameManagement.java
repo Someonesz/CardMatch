@@ -2,6 +2,9 @@ package top.someones.cardmatch.core;
 
 import android.content.Context;
 import android.content.res.AssetManager;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteOpenHelper;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Handler;
@@ -23,26 +26,34 @@ import java.io.InputStreamReader;
 import java.util.Enumeration;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 import top.someones.cardmatch.R;
-import top.someones.cardmatch.entity.GameResource;
 import top.someones.cardmatch.entity.Mod;
 
+/**
+ * 信息管理
+ *
+ * @author Someones
+ * @version 1.5
+ */
 public class GameManagement {
 
-    private static final Map<String, GameResource> mGameResources = new ConcurrentHashMap<>();
     private static boolean mInitialized = false;
     private static Bitmap mDefaultBitmap;
+    private static final Random random = new Random();
 
     private GameManagement() {
     }
 
-    public static void init(Context context) {
+    private static SQLiteOpenHelper getSQLiteOpenHelper(Context context) {
+        return new DatabaseHelper(context);
+
+    }
+
+    private static void init(Context context) throws Exception {
         mDefaultBitmap = BitmapFactory.decodeResource(context.getResources(), R.drawable.error);
         File modDirectory = context.getFileStreamPath("mod");
         if (!modDirectory.exists()) {
@@ -54,38 +65,144 @@ public class GameManagement {
             modDirectory.mkdirs();
         } else {
             if (files.length == 0) {
-                copyDefaultRes(context);
-            }
-            files = modDirectory.listFiles();
-            if (files != null) {
-                for (File file : files) {
-                    if (file.isDirectory()) {
-                        GameResource res = getGameRes(file);
-                        if (res != null) {
-                            mGameResources.put(res.getUUID(), res);
-                        }
-                    }
+                File tmpDirectory = copyDefaultRes(context);
+                for (File modFile : tmpDirectory.listFiles()) {
+                    installMod(context, modFile);
                 }
-                mInitialized = true;
+            }
+        }
+        mInitialized = true;
+    }
+
+    public static void installMod(Context context, File modFile) throws Exception {
+        ZipFile zipFile = new ZipFile(modFile);
+        JSONObject config = testFile(zipFile);
+        if (config == null)
+            throw new Exception("读取配置文件失败");
+
+        String uuid = config.getString("UUID");
+        String name = config.getString("Mod_Name");
+        String author = config.getString("Author");
+        String version = config.getString("Version");
+        String frontImageName = config.getString("FrontImageName");
+        JSONArray backImageName = config.getJSONArray("BackImageName");
+        String show = null;
+        if (config.has("Show"))
+            show = config.getString("Show");
+
+        if (backImageName.length() < GameObserver.MAX_VIEW / 2)
+            throw new Exception("Mod图片太少");
+
+        StringBuilder backImageString = new StringBuilder();
+        for (int i = 0; i < backImageName.length(); i++) {
+            backImageString.append(backImageName.getString(i));
+            backImageString.append(":");
+        }
+        backImageString.deleteCharAt(backImageString.length() - 1);
+
+        String part = context.getFileStreamPath("mod").getPath() + "/" + uuid;
+        try {
+            File modDirectory = new File(part);
+            if (modDirectory.exists()) {
+                deleteFile(modDirectory);
+            }
+            if (!modDirectory.mkdirs())
+                throw new Exception("Mod目录创建失败");
+            Enumeration<? extends ZipEntry> entries = zipFile.entries();
+            while (entries.hasMoreElements()) {
+                ZipEntry zipEntry = entries.nextElement();
+                if (zipEntry.isDirectory())
+                    continue;
+                writeFile(zipFile.getInputStream(zipEntry), new File(part, zipEntry.getName()));
+            }
+            zipFile.close();
+
+            try (SQLiteOpenHelper helper = getSQLiteOpenHelper(context)) {
+                SQLiteDatabase db = helper.getWritableDatabase();
+                db.execSQL(SQL.DELETE_MOD, new Object[]{uuid});
+                db.execSQL(SQL.ADD_MOD, new Object[]{uuid, name, author, show, version, part, frontImageName, backImageString.toString()});
+            } catch (Exception e) {
+                e.printStackTrace();
+                throw new Exception("数据库出错：" + e.getMessage());
+            }
+        } catch (Exception e) {
+            deleteFile(new File(part));
+            throw e;
+        }
+    }
+
+    public static double getModVersion(Context context, String uuid) {
+        try (SQLiteOpenHelper helper = getSQLiteOpenHelper(context)) {
+            SQLiteDatabase db = helper.getReadableDatabase();
+            try (Cursor cursor = db.rawQuery(SQL.FIND_MOD_VERSION, new String[]{uuid})) {
+                if (cursor.moveToNext()) {
+                    return cursor.getDouble(cursor.getColumnIndex("Version"));
+                } else {
+                    return -1;
+                }
             }
         }
     }
 
-    public static GameObserver getGameObserver(String name, Context context, Handler handler) {
+    public static Mod[] getMods(Context context) throws Exception {
         if (!mInitialized)
             init(context);
-        GameResource res = mGameResources.get(name);
-        if (res == null)
-            return null;
+        Mod[] mods;
+        try (SQLiteOpenHelper helper = getSQLiteOpenHelper(context)) {
+            SQLiteDatabase db = helper.getReadableDatabase();
+            try (Cursor cursor = db.rawQuery(SQL.SELECT_ALL_MOD, new String[0])) {
+                List<Mod> list = new LinkedList<>();
+                while (cursor.moveToNext()) {
+                    String uuid = cursor.getString(cursor.getColumnIndex("uuid"));
+                    String name = cursor.getString(cursor.getColumnIndex("Name"));
+                    String author = cursor.getString(cursor.getColumnIndex("Author"));
+                    String show = cursor.getString(cursor.getColumnIndex("Show"));
+                    Double version = cursor.getDouble(cursor.getColumnIndex("Version"));
+                    String resPath = cursor.getString(cursor.getColumnIndex("ResPath"));
+                    Bitmap bitmap = ImageCache.getCache(uuid);
+                    if (bitmap == null) {
+                        bitmap = BitmapFactory.decodeFile(resPath + "/" + "cover.jpg");
+                        if (bitmap == null) {
+                            String backRes = cursor.getString(cursor.getColumnIndex("BackRes"));
+                            String[] subString = backRes.split(":");
+                            bitmap = BitmapFactory.decodeFile(resPath + "/" + subString[random.nextInt(subString.length)]);
+                        }
+                        if (bitmap == null) {
+                            bitmap = mDefaultBitmap;
+                        }
+                        ImageCache.addBaseCache(uuid, bitmap);
+                    }
+                    list.add(new Mod(uuid, name, bitmap, author, version, show));
+                }
+                mods = list.toArray(new Mod[0]);
+            }
+        }
+        return mods;
+    }
+
+    public static GameObserver getGameObserver(String uuid, Context context, Handler handler) {
+        String resPath;
+        String frontResName;
+        String[] backResName;
+        try (SQLiteOpenHelper helper = getSQLiteOpenHelper(context)) {
+            SQLiteDatabase db = helper.getReadableDatabase();
+            try (Cursor cursor = db.rawQuery(SQL.INIT_GAME, new String[]{uuid})) {
+                if (cursor.moveToNext()) {
+                    resPath = cursor.getString(cursor.getColumnIndex("ResPath"));
+                    frontResName = cursor.getString(cursor.getColumnIndex("FrontRes"));
+                    backResName = cursor.getString(cursor.getColumnIndex("BackRes")).split(":");
+                } else return null;
+            }
+        }
         Bitmap frontRes;
         Bitmap[] backRes;
         try {
-            frontRes = BitmapFactory.decodeStream(new FileInputStream(new File(res.getResPath(), res.getFrontResName())));
+            frontRes = BitmapFactory.decodeStream(new FileInputStream(new File(resPath, frontResName)));
             List<Bitmap> bitmaps = new LinkedList<>();
-            for (String backResName : res.getBackResName()) {
-                File resFile = new File(res.getResPath(), backResName);
+            for (String fileName : backResName) {
+                File resFile = new File(resPath, fileName);
                 if (resFile.isFile()) {
-                    Bitmap bitmap = BitmapFactory.decodeFile(res.getResPath() + "/" + backResName);
+                    Bitmap bitmap = BitmapFactory.decodeFile(resPath + "/" + fileName);
                     if (bitmap != null) {
                         bitmaps.add(bitmap);
                     }
@@ -103,124 +220,36 @@ public class GameManagement {
         return null;
     }
 
-    public static GameResource[] getAllGameRes(Context context) {
-        if (!mInitialized)
-            init(context);
-        return mGameResources.values().toArray(new GameResource[0]);
-    }
-
-    public static Mod[] getMods(Context context) {
-        if (!mInitialized)
-            init(context);
-        Mod[] mods = new Mod[mGameResources.size()];
-        int i = 0;
-        for (GameResource next : mGameResources.values()) {
-            mods[i++] = new Mod(next.getUUID(), next.getName(), next.getCover(), next.getAuthor(), next.getVersion());
+    private static File copyDefaultRes(Context context) throws IOException {
+        AssetManager assetManager = context.getAssets();
+        String[] resFilesName = assetManager.list("DefaultRes");
+        File tmpDirectory = context.getFileStreamPath("tmp");
+        if (!tmpDirectory.isDirectory()) {
+            if (tmpDirectory.exists()) {
+                deleteFile(tmpDirectory);
+            }
+            if (!tmpDirectory.mkdirs())
+                throw new IOException("临时目录创建失败");
         }
-        return mods;
-    }
-
-    private static GameResource getGameRes(File resDirectory) {
-        try {
-            String resPath = resDirectory.getPath();
-            File gameConfig = new File(resDirectory.getPath() + "/" + "GameConfig.json");
-            if (!gameConfig.isFile())
-                return null;
-            JSONObject config = new JSONObject(readTextFile(new FileInputStream(gameConfig)));
-            String uuid = config.getString("uuid");
-            String name = config.getString("Mod_Name");
-            String author = config.getString("Author");
-            Double version = config.getDouble("version");
-            String frontImagePath = config.getString("FrontImageName");
-            JSONArray jarr = config.getJSONArray("BackImageName");
-            List<String> backImagesName = new LinkedList<>();
-            for (int i = 0; i < jarr.length(); i++) {
-                backImagesName.add(jarr.getString(i));
-            }
-            if (backImagesName.size() < GameObserver.MAX_VIEW / 2)
-                return null;
-            Bitmap bitmap = ImageCache.getCache(uuid);
-            if (bitmap == null) {
-                if (config.has("cover")) {
-                    bitmap = BitmapFactory.decodeFile(resPath + "/" + config.getString("cover"));
-                } else {
-                    bitmap = BitmapFactory.decodeFile(resPath + "/" + backImagesName.get(new Random().nextInt(backImagesName.size())));
-                }
-                if (bitmap == null) {
-                    bitmap = mDefaultBitmap;
-                }
-                ImageCache.addBaseCache(uuid, bitmap);
-            }
-            return new GameResource(uuid, name, author, version, resPath, bitmap, frontImagePath, backImagesName.toArray(new String[0]));
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
+        for (String resFileName : resFilesName) {
+            File resFile = new File(tmpDirectory, resFileName);
+            resFile.createNewFile();
+            writeFile(assetManager.open("DefaultRes" + "/" + resFileName), resFile);
         }
+        return tmpDirectory;
     }
 
-    public static boolean installMod(Context context, ZipFile zipFile) {
-        try {
-            String uuid = testFile(zipFile);
-            if (uuid == null)
-                return false;
-            String part = context.getFileStreamPath("mod").getPath() + "/" + uuid;
-            File modDirectory = new File(part);
-            if (modDirectory.isDirectory()) {
-                deleteFile(modDirectory);
-            }
-            if (!modDirectory.mkdirs())
-                return false;
-            Enumeration<? extends ZipEntry> entris = zipFile.entries();
-            while (entris.hasMoreElements()) {
-                ZipEntry zipEntry = entris.nextElement();
-                if (zipEntry.isDirectory())
-                    continue;
-                writeFile(zipFile.getInputStream(zipEntry), new File(part, zipEntry.getName()));
-            }
-            zipFile.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
-        }
-        GameManagement.init(context);
-        return true;
-    }
-
-    private static void copyDefaultRes(Context context) {
-        try {
-            AssetManager assetManager = context.getAssets();
-            String[] resDirectoriesName = assetManager.list("DefaultRes");
-            File modDirectory = context.getFileStreamPath("mod");
-            for (String resDirectoryName : resDirectoriesName) {
-                try {
-                    File resDirectory = new File(modDirectory, resDirectoryName);
-                    resDirectory.mkdirs();
-                    String[] resFilesName = assetManager.list("DefaultRes" + "/" + resDirectoryName);
-                    for (String resFileName : resFilesName) {
-                        File resFile = new File(modDirectory + "/" + resDirectoryName + "/" + resFileName);
-                        resFile.createNewFile();
-                        writeFile(assetManager.open("DefaultRes" + "/" + resDirectoryName + "/" + resFileName), resFile);
-                    }
-                } catch (IOException ignored) {
-                }
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private static String testFile(ZipFile zipFile) throws IOException {
+    private static JSONObject testFile(ZipFile zipFile) throws IOException {
         Enumeration<? extends ZipEntry> entries = zipFile.entries();
         while (entries.hasMoreElements()) {
             ZipEntry zipEntry = entries.nextElement();
             if (zipEntry.isDirectory())
                 continue;
             if (zipEntry.getName().equals("GameConfig.json")) {
-                String str = readTextFile(zipFile.getInputStream(zipEntry));
                 try {
-                    JSONObject json = new JSONObject(str);
-                    if ("Card Match".equals(json.getString("for")) && json.has("Mod_Name") && json.has("Author") && json.has("FrontImageName") && json.has("BackImageName")) {
-                        return json.getString("uuid");
+                    JSONObject config = new JSONObject(readTextFile(zipFile.getInputStream(zipEntry)));
+                    if ("Card Match".equals(config.getString("for")) && config.has("Mod_Name") && config.has("Author") && config.has("Version") && config.has("FrontImageName") && config.has("BackImageName")) {
+                        return config;
                     } else
                         return null;
                 } catch (JSONException e) {
@@ -269,6 +298,14 @@ public class GameManagement {
                 } else tmpFile.delete();
         }
         file.delete();
+    }
+
+    private static final class SQL {
+        private static final String ADD_MOD = "INSERT INTO Resources (uuid,Name,Author,Show,Version,ResPath,FrontRes,BackRes) VALUES (?,?,?,?,?,?,?,?)";
+        private static final String SELECT_ALL_MOD = "SELECT uuid,Name,Author,Show,Version,ResPath FROM Resources ORDER BY Weight DESC";
+        private static final String DELETE_MOD = "DELETE FROM Resources WHERE UUID = ?";
+        private static final String FIND_MOD_VERSION = "SELECT Version FROM Resources WHERE uuid = ?";
+        private static final String INIT_GAME = "SELECT Name,Author,Show,Version,ResPath,FrontRes,BackRes FROM Resources WHERE uuid = ?";
     }
 
     private static class GameObserverAdaptor extends BaseGameObserver {

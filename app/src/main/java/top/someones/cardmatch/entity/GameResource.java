@@ -2,6 +2,7 @@ package top.someones.cardmatch.entity;
 
 import android.graphics.Bitmap;
 
+@Deprecated
 public class GameResource {
 
     private final String UUID;

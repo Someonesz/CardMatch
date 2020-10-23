@@ -26,7 +26,7 @@ import org.json.JSONObject;
 import java.io.IOException;
 
 public class WorkshopActivity extends AppCompatActivity {
-    private static final String DOMAIN = "http://192.168.43.50:8080/CardMatchService/";
+    private static final String DOMAIN = "http://192.168.3.14:8080/CardMatchService/";
     private OkHttpClient httpClient;
     private RecyclerView modList;
     private ProgressDialog loading;
@@ -94,7 +94,7 @@ public class WorkshopActivity extends AppCompatActivity {
                 ImageCache.addWorkshopCache(uuid, bitmap);
             }
         }
-        return new Mod(uuid, json.getString("Mod_Name"), bitmap, json.getString("Author"), json.getDouble("Version"));
+        return new Mod(uuid, json.getString("Mod_Name"), bitmap, json.getString("Author"), json.getDouble("Version"), null);
     }
 
     @Override
