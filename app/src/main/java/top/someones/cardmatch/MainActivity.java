@@ -1,18 +1,5 @@
 package top.someones.cardmatch;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
-
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-import top.someones.cardmatch.core.GameManagement;
-import top.someones.cardmatch.entity.Mod;
-import top.someones.cardmatch.ui.ModAdapter;
-import top.someones.cardmatch.ui.PermissionsManagement;
-import top.someones.cardmatch.ui.TwoActivity;
-import top.someones.cardmatch.ui.WorkshopActivity;
-
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Intent;
@@ -20,13 +7,26 @@ import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
-import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
-import org.apache.commons.io.FileUtils;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
+import top.someones.cardmatch.core.GameManagement;
+import top.someones.cardmatch.entity.Mod;
+import top.someones.cardmatch.ui.ModAdapter;
+import top.someones.cardmatch.ui.PermissionsManagement;
+import top.someones.cardmatch.ui.TwoActivity;
+import top.someones.cardmatch.ui.WorkshopActivity;
 
 import java.io.File;
+
+import org.apache.commons.io.FileUtils;
+
 
 public class MainActivity extends AppCompatActivity {
 
@@ -46,20 +46,6 @@ public class MainActivity extends AppCompatActivity {
         loading = ProgressDialog.show(this, "请稍后", "正在加载数据");
         modList = findViewById(R.id.modList1);
         intent = new Intent(this, TwoActivity.class);
-        new Thread(() -> {
-            try {
-                Mod[] mods = GameManagement.getMods(this);
-                runOnUiThread(() -> {
-                    try {
-                        modList.setAdapter(new ModAdapter(mods, mod -> startActivity(intent.putExtra("uuid", mod.getUUID()))));
-                    } catch (Exception ignored) {
-                    }
-                });
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            loading.dismiss();
-        }).start();
         modList.setLayoutManager(new LinearLayoutManager(this));
     }
 
@@ -76,6 +62,29 @@ public class MainActivity extends AppCompatActivity {
         } else {
             PermissionsManagement.verifyPermissions(this, MainActivity.PERMISSIONS, MainActivity.REQUEST_STORAGE_PERMISSION);
         }
+    }
+
+    private void updateList() {
+        new Thread(() -> {
+            try {
+                Mod[] mods = GameManagement.getMods(this);
+                runOnUiThread(() -> {
+                    try {
+                        modList.setAdapter(new ModAdapter(mods, mod -> startActivity(intent.putExtra("uuid", mod.getUUID()))));
+                    } catch (Exception ignored) {
+                    }
+                });
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            loading.dismiss();
+        }).start();
+    }
+
+    @Override
+    protected void onResume() {
+        updateList();
+        super.onResume();
     }
 
     @Override
@@ -98,29 +107,15 @@ public class MainActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         if (requestCode == REQUEST_READ_ZIP_FILE && resultCode == Activity.RESULT_OK && data != null) {
             Uri uri = data.getData();
-            if (uri != null) {
+            if (uri != null && uri.getPath() != null) {
                 String path = getRealPath(uri.getPath());
-                Log.d("InstallMod", path);
                 try {
                     GameManagement.installMod(this, new File(path));
                     Toast.makeText(this, "Mod安装成功", Toast.LENGTH_SHORT).show();
+                    updateList();
                 } catch (Exception e) {
                     Toast.makeText(this, "Mod安装失败：" + e.getMessage(), Toast.LENGTH_SHORT).show();
                 }
-                new Thread(() -> {
-                    try {
-                        Mod[] mods = GameManagement.getMods(this);
-                        runOnUiThread(() -> {
-                            try {
-                                modList.setAdapter(new ModAdapter(mods, mod -> startActivity(intent.putExtra("uuid", mod.getUUID()))));
-                            } catch (Exception ignored) {
-                            }
-                        });
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                    loading.dismiss();
-                }).start();
             }
         }
         super.onActivityResult(requestCode, resultCode, data);

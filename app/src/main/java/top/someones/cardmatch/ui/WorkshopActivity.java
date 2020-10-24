@@ -1,23 +1,26 @@
 package top.someones.cardmatch.ui;
 
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-import okhttp3.Call;
-import okhttp3.Callback;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
-import top.someones.cardmatch.R;
-import top.someones.cardmatch.core.ImageCache;
-import top.someones.cardmatch.entity.Mod;
-
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
+import android.util.Log;
+
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
+
+import top.someones.cardmatch.R;
+import top.someones.cardmatch.core.ImageCache;
+import top.someones.cardmatch.entity.Mod;
 
 import org.jetbrains.annotations.NotNull;
 import org.json.JSONArray;
@@ -62,7 +65,9 @@ public class WorkshopActivity extends AppCompatActivity {
             public void onResponse(@NotNull Call call, @NotNull Response response) {
                 loading.dismiss();
                 try {
-                    JSONObject json = new JSONObject(response.body().string());
+                    String html = response.body().string();
+                    Log.d("netd", html);
+                    JSONObject json = new JSONObject(html);
                     JSONArray jarr = json.getJSONArray("hot");
                     Mod[] mods = new Mod[jarr.length()];
                     for (int i = 0; i < jarr.length(); i++) {

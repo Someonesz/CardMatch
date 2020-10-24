@@ -55,25 +55,6 @@ public class GameManagement {
 
     private static SQLiteOpenHelper getSQLiteOpenHelper(Context context) {
         return new DatabaseHelper(context);
-
-    }
-
-    private static void init(Context context) throws Exception {
-        mDefaultBitmap = BitmapFactory.decodeResource(context.getResources(), R.drawable.error);
-        File modDirectory = context.getFileStreamPath("mod");
-        File[] files = modDirectory.listFiles();
-        if (files == null || files.length == 0) {
-            if (modDirectory.exists())
-                FileUtils.deleteDirectory(modDirectory);
-            File[] tmpDirectory = copyDefaultRes(context).listFiles();
-            if (tmpDirectory == null) {
-                throw new Exception("初始化失败");
-            }
-            for (File modFile : tmpDirectory) {
-                installMod(context, modFile);
-            }
-        }
-        mInitialized = true;
     }
 
     public static void installMod(Context context, File modFile) throws Exception {
@@ -226,6 +207,35 @@ public class GameManagement {
         if (frontRes != null)
             return new GameObserverAdaptor(context, handler, frontRes, backRes);
         return null;
+    }
+
+    public static boolean deleteMod(Context context, String uuid) {
+        File modDirectory = context.getFileStreamPath("mod");
+        if (FileUtils.deleteQuietly(new File(modDirectory.getPath(), uuid))) {
+            try (SQLiteOpenHelper helper = getSQLiteOpenHelper(context)) {
+                helper.getReadableDatabase().execSQL(SQL.DELETE_MOD, new Object[]{uuid});
+            }
+            return true;
+        } else
+            return false;
+    }
+
+    private static void init(Context context) throws Exception {
+        mDefaultBitmap = BitmapFactory.decodeResource(context.getResources(), R.drawable.error);
+        File modDirectory = context.getFileStreamPath("mod");
+        File[] files = modDirectory.listFiles();
+        if (files == null || files.length == 0) {
+            if (modDirectory.exists())
+                FileUtils.deleteDirectory(modDirectory);
+            File[] tmpDirectory = copyDefaultRes(context).listFiles();
+            if (tmpDirectory == null) {
+                throw new Exception("初始化失败");
+            }
+            for (File modFile : tmpDirectory) {
+                installMod(context, modFile);
+            }
+        }
+        mInitialized = true;
     }
 
     private static File copyDefaultRes(Context context) throws IOException {
