@@ -31,6 +31,7 @@ android {
 dependencies {
 
     implementation("com.squareup.okhttp3:okhttp:4.9.0")
+    implementation fileTree(dir: "libs", include: ["*.jar"])
 
     implementation 'androidx.recyclerview:recyclerview:1.1.0'
 

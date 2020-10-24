@@ -24,6 +24,8 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
+import org.apache.commons.io.FileUtils;
+
 import java.io.File;
 
 public class MainActivity extends AppCompatActivity {
@@ -140,20 +142,8 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
-        deleteFile(getFileStreamPath("tmp"));
+        FileUtils.deleteQuietly(getFileStreamPath("tmp"));
         super.onDestroy();
-    }
-
-    private void deleteFile(File file) {
-        if (!file.exists())
-            return;
-        if (file.isDirectory()) {
-            for (File tmpFile : file.listFiles())
-                if (tmpFile.isDirectory()) {
-                    deleteFile(tmpFile);
-                } else tmpFile.delete();
-        }
-        file.delete();
     }
 
 }

@@ -7,11 +7,14 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.os.Build;
 import android.os.Handler;
 import android.view.View;
 import android.widget.ImageView;
 
+import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
+import org.apache.commons.compress.archivers.zip.ZipFile;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -20,28 +23,26 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 import java.util.Enumeration;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
 
-import androidx.annotation.RequiresApi;
 import top.someones.cardmatch.R;
 import top.someones.cardmatch.entity.Mod;
 
 /**
  * 信息管理
  *
+ * <p> 更新信息
+ * ver1.5:使用数据库管理信息
+ * ver1.6:添加了两个外部包(commons-io,commons-compress)用于处理文件
+ *
  * @author Someones
- * @version 1.5
+ * @version 1.6
  */
 public class GameManagement {
 
@@ -60,26 +61,23 @@ public class GameManagement {
     private static void init(Context context) throws Exception {
         mDefaultBitmap = BitmapFactory.decodeResource(context.getResources(), R.drawable.error);
         File modDirectory = context.getFileStreamPath("mod");
-        if (!modDirectory.exists()) {
-            modDirectory.mkdirs();
-        }
         File[] files = modDirectory.listFiles();
-        if (files == null) {
-            modDirectory.delete();
-            modDirectory.mkdirs();
-        } else {
-            if (files.length == 0) {
-                File tmpDirectory = copyDefaultRes(context);
-                for (File modFile : tmpDirectory.listFiles()) {
-                    installMod(context, modFile);
-                }
+        if (files == null || files.length == 0) {
+            if (modDirectory.exists())
+                FileUtils.deleteDirectory(modDirectory);
+            File[] tmpDirectory = copyDefaultRes(context).listFiles();
+            if (tmpDirectory == null) {
+                throw new Exception("初始化失败");
+            }
+            for (File modFile : tmpDirectory) {
+                installMod(context, modFile);
             }
         }
         mInitialized = true;
     }
 
     public static void installMod(Context context, File modFile) throws Exception {
-        ZipFile zipFile = getZipFile(modFile);
+        ZipFile zipFile = new ZipFile(modFile);
         JSONObject config = testFile(zipFile);
         if (config == null)
             throw new Exception("读取配置文件失败");
@@ -96,7 +94,6 @@ public class GameManagement {
         String cover = null;
         if (config.has("Cover"))
             cover = config.getString("Cover");
-
         if (backImageName.length() < GameObserver.MAX_VIEW / 2)
             throw new Exception("Mod图片太少");
 
@@ -111,16 +108,17 @@ public class GameManagement {
         try {
             File modDirectory = new File(part);
             if (modDirectory.exists()) {
-                deleteFile(modDirectory);
+                FileUtils.deleteQuietly(modDirectory);
             }
             if (!modDirectory.mkdirs())
                 throw new Exception("Mod目录创建失败");
-            Enumeration<? extends ZipEntry> entries = zipFile.entries();
+            Enumeration<ZipArchiveEntry> entries = zipFile.getEntries();
+            ZipArchiveEntry zipEntry;
             while (entries.hasMoreElements()) {
-                ZipEntry zipEntry = entries.nextElement();
+                zipEntry = entries.nextElement();
                 if (zipEntry.isDirectory())
                     continue;
-                writeFile(zipFile.getInputStream(zipEntry), new File(part, zipEntry.getName()));
+                FileUtils.copyToFile(zipFile.getInputStream(zipEntry), new File(part, zipEntry.getName()));
             }
             zipFile.close();
 
@@ -133,32 +131,8 @@ public class GameManagement {
                 throw new Exception("数据库出错：" + e.getMessage());
             }
         } catch (Exception e) {
-            deleteFile(new File(part));
+            FileUtils.deleteQuietly(new File(part));
             throw e;
-        }
-    }
-
-    /**
-     * zip编码检查
-     * 临时使用,后续使用 Apache Commons Compress™ 处理
-     *
-     * @param zipFile zip文件
-     * @return 转换后的zip
-     * @throws IOException 文件不是一个zip文件
-     */
-    private static ZipFile getZipFile(File zipFile) throws IOException {
-        ZipFile zip = new ZipFile(zipFile, StandardCharsets.UTF_8);
-        Enumeration<? extends ZipEntry> entries = zip.entries();
-        try {
-            while (entries.hasMoreElements()) {
-                entries.nextElement();
-            }
-            zip.close();
-            zip = new ZipFile(zipFile, StandardCharsets.UTF_8);
-            return zip;
-        } catch (Exception e) {
-            zip = new ZipFile(zipFile, Charset.forName("GBK"));
-            return zip;
         }
     }
 
@@ -193,7 +167,9 @@ public class GameManagement {
                     Bitmap bitmap = ImageCache.getCache(uuid);
                     if (bitmap == null) {
                         String cover = cursor.getString(cursor.getColumnIndex("Cover"));
-                        bitmap = BitmapFactory.decodeFile(resPath + "/" + cover);
+                        if (cover != null) {
+                            bitmap = BitmapFactory.decodeFile(resPath + "/" + cover);
+                        }
                         if (bitmap == null) {
                             String backRes = cursor.getString(cursor.getColumnIndex("BackRes"));
                             String[] subString = backRes.split(":");
@@ -255,41 +231,33 @@ public class GameManagement {
     private static File copyDefaultRes(Context context) throws IOException {
         AssetManager assetManager = context.getAssets();
         String[] resFilesName = assetManager.list("DefaultRes");
-        File tmpDirectory = context.getFileStreamPath("tmp");
-        if (!tmpDirectory.isDirectory()) {
-            if (tmpDirectory.exists()) {
-                deleteFile(tmpDirectory);
-            }
-            if (!tmpDirectory.mkdirs())
-                throw new IOException("临时目录创建失败");
+        if (resFilesName == null) {
+            throw new IOException("默认资源读取失败");
         }
+        File tmpDirectory = context.getFileStreamPath("tmp");
         for (String resFileName : resFilesName) {
+            InputStream in = assetManager.open("DefaultRes" + "/" + resFileName);
             File resFile = new File(tmpDirectory, resFileName);
-            resFile.createNewFile();
-            writeFile(assetManager.open("DefaultRes" + "/" + resFileName), resFile);
+            FileUtils.copyToFile(in, resFile);
+            IOUtils.close(in);
         }
         return tmpDirectory;
     }
 
     private static JSONObject testFile(ZipFile zipFile) throws IOException {
-        Enumeration<? extends ZipEntry> entries = zipFile.entries();
-        while (entries.hasMoreElements()) {
-            ZipEntry zipEntry = entries.nextElement();
-            if (zipEntry.isDirectory())
-                continue;
-            if (zipEntry.getName().equals("GameConfig.json")) {
-                try {
-                    JSONObject config = new JSONObject(readTextFile(zipFile.getInputStream(zipEntry)));
-                    if ("Card Match".equals(config.getString("for")) && config.has("Mod_Name") && config.has("Author") && config.has("Version") && config.has("FrontImageName") && config.has("BackImageName")) {
-                        return config;
-                    } else
-                        return null;
-                } catch (JSONException e) {
-                    return null;
-                }
-            }
+        ZipArchiveEntry zipEntry = zipFile.getEntry("GameConfig.json");
+        if (zipEntry == null) {
+            return null;
         }
-        return null;
+        try {
+            JSONObject config = new JSONObject(readTextFile(zipFile.getInputStream(zipEntry)));
+            if ("Card Match".equals(config.getString("for")) && config.has("Mod_Name") && config.has("Author") && config.has("Version") && config.has("FrontImageName") && config.has("BackImageName")) {
+                return config;
+            } else
+                return null;
+        } catch (JSONException e) {
+            return null;
+        }
     }
 
     private static String readTextFile(InputStream input) throws IOException {
@@ -303,33 +271,6 @@ public class GameManagement {
             input.close();
         }
         return sb.toString();
-    }
-
-    private static void writeFile(InputStream input, File outFile) throws IOException {
-        byte[] bytes = new byte[2048];
-        int len;
-        if (outFile.exists())
-            outFile.delete();
-        outFile.createNewFile();
-        try (FileOutputStream out = new FileOutputStream(outFile)) {
-            while ((len = input.read(bytes)) > 0) {
-                out.write(bytes, 0, len);
-            }
-            out.flush();
-            input.close();
-        }
-    }
-
-    private static void deleteFile(File file) {
-        if (!file.exists())
-            return;
-        if (file.isDirectory()) {
-            for (File tmpFile : file.listFiles())
-                if (tmpFile.isDirectory()) {
-                    deleteFile(tmpFile);
-                } else tmpFile.delete();
-        }
-        file.delete();
     }
 
     private static final class SQL {
