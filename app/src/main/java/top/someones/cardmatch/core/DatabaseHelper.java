@@ -7,7 +7,7 @@ import android.util.Log;
 
 public class DatabaseHelper extends SQLiteOpenHelper {
 
-    private static final String CREATE_TABLE = "CREATE TABLE Resources (uuid primary key,Name,Author,Show,Version REAL,ResPath,FrontRes,BackRes,Weight INTEGER DEFAULT 0)";
+    private static final String CREATE_TABLE = "CREATE TABLE Resources (uuid primary key,Name,Author,Show,Version REAL,ResPath,Cover,FrontRes,BackRes,Weight INTEGER DEFAULT 0)";
 
     public DatabaseHelper(Context context) {
         super(context, "CardMatch.db", null, 1);

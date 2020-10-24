@@ -93,6 +93,9 @@ public class GameManagement {
         String show = null;
         if (config.has("Show"))
             show = config.getString("Show");
+        String cover = null;
+        if (config.has("Cover"))
+            cover = config.getString("Cover");
 
         if (backImageName.length() < GameObserver.MAX_VIEW / 2)
             throw new Exception("Mod图片太少");
@@ -124,7 +127,7 @@ public class GameManagement {
             try (SQLiteOpenHelper helper = getSQLiteOpenHelper(context)) {
                 SQLiteDatabase db = helper.getWritableDatabase();
                 db.execSQL(SQL.DELETE_MOD, new Object[]{uuid});
-                db.execSQL(SQL.ADD_MOD, new Object[]{uuid, name, author, show, version, part, frontImageName, backImageString.toString()});
+                db.execSQL(SQL.ADD_MOD, new Object[]{uuid, name, author, show, version, part, cover, frontImageName, backImageString.toString()});
             } catch (Exception e) {
                 e.printStackTrace();
                 throw new Exception("数据库出错：" + e.getMessage());
@@ -189,10 +192,8 @@ public class GameManagement {
                     String resPath = cursor.getString(cursor.getColumnIndex("ResPath"));
                     Bitmap bitmap = ImageCache.getCache(uuid);
                     if (bitmap == null) {
-                        bitmap = BitmapFactory.decodeFile(resPath + "/" + "cover.png");
-                        if (bitmap == null) {
-                            bitmap = BitmapFactory.decodeFile(resPath + "/" + "cover.jpg");
-                        }
+                        String cover = cursor.getString(cursor.getColumnIndex("Cover"));
+                        bitmap = BitmapFactory.decodeFile(resPath + "/" + cover);
                         if (bitmap == null) {
                             String backRes = cursor.getString(cursor.getColumnIndex("BackRes"));
                             String[] subString = backRes.split(":");
@@ -332,8 +333,8 @@ public class GameManagement {
     }
 
     private static final class SQL {
-        private static final String ADD_MOD = "INSERT INTO Resources (uuid,Name,Author,Show,Version,ResPath,FrontRes,BackRes) VALUES (?,?,?,?,?,?,?,?)";
-        private static final String SELECT_ALL_MOD = "SELECT uuid,Name,Author,Show,Version,ResPath,BackRes FROM Resources ORDER BY Weight DESC";
+        private static final String ADD_MOD = "INSERT INTO Resources (uuid,Name,Author,Show,Version,ResPath,Cover,FrontRes,BackRes) VALUES (?,?,?,?,?,?,?,?,?)";
+        private static final String SELECT_ALL_MOD = "SELECT uuid,Name,Author,Show,Version,ResPath,Cover,BackRes FROM Resources ORDER BY Weight DESC";
         private static final String DELETE_MOD = "DELETE FROM Resources WHERE UUID = ?";
         private static final String FIND_MOD_VERSION = "SELECT Version FROM Resources WHERE uuid = ?";
         private static final String INIT_GAME = "SELECT Name,Author,Show,Version,ResPath,FrontRes,BackRes FROM Resources WHERE uuid = ?";
