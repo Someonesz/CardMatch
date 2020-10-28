@@ -58,9 +58,7 @@ public class ModInfoActivity extends AppCompatActivity {
         modCover = findViewById(R.id.modCover);
         take = findViewById(R.id.take);
 
-        loading = ProgressDialog.show(this, "请稍后", "正在加载数据", true, false, dialog -> {
-            ModInfoActivity.this.finish();
-        });
+        loading = ProgressDialog.show(this, "请稍后", "正在加载数据", true, false, dialog -> ModInfoActivity.this.finish());
 
         mLiveData = ModLiveData.getLiveData();
 
@@ -82,7 +80,7 @@ public class ModInfoActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+            public void onResponse(@NotNull Call call, @NotNull Response response) {
                 runOnUiThread(() -> {
                     try {
                         JSONObject json = new JSONObject(response.body().string());
@@ -119,10 +117,10 @@ public class ModInfoActivity extends AppCompatActivity {
         take.setOnClickListener(v -> {
             Button btn = (Button) v;
             btn.setEnabled(false);
-            if ("订阅".equals(btn.getText()) || "更新".equals(btn.getText())) {
+            if ("订阅".contentEquals(btn.getText()) || "更新".contentEquals(btn.getText())) {
                 Toast.makeText(this, "正在下载", Toast.LENGTH_SHORT).show();
                 downloadAndInstall(btn);
-            } else if ("取消订阅".equals(btn.getText())) {
+            } else if ("取消订阅".contentEquals(btn.getText())) {
                 if (GameManagement.deleteMod(ModInfoActivity.this, uuid)) {
                     btn.setText("订阅");
                     try {
@@ -154,14 +152,10 @@ public class ModInfoActivity extends AppCompatActivity {
                 });
             } catch (IOException e) {
                 e.printStackTrace();
-                runOnUiThread(() -> {
-                    Toast.makeText(this, "下载失败" + e.getMessage(), Toast.LENGTH_SHORT).show();
-                });
+                runOnUiThread(() -> Toast.makeText(this, "下载失败" + e.getMessage(), Toast.LENGTH_SHORT).show());
             } catch (Exception e) {
                 e.printStackTrace();
-                runOnUiThread(() -> {
-                    Toast.makeText(this, "MOD安装失败" + e.getMessage(), Toast.LENGTH_SHORT).show();
-                });
+                runOnUiThread(() -> Toast.makeText(this, "MOD安装失败" + e.getMessage(), Toast.LENGTH_SHORT).show());
             }
         }).start();
     }
