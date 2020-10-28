@@ -29,10 +29,12 @@ import org.json.JSONObject;
 import java.io.IOException;
 
 public class WorkshopActivity extends AppCompatActivity {
-    private static final String DOMAIN = "http://192.168.43.50:8080/CardMatchService/";
+    private static final String DOMAIN = "http://192.168.3.14:8080/CardMatchService/";
     private OkHttpClient httpClient;
     private RecyclerView modList;
     private ProgressDialog loading;
+    private boolean cancel = false;
+    private Call call;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,15 +43,21 @@ public class WorkshopActivity extends AppCompatActivity {
 
         modList = findViewById(R.id.modList);
         modList.setLayoutManager(new LinearLayoutManager(this));
-        loading = ProgressDialog.show(this, "请稍后", "正在连接到创意工坊");
+        loading = ProgressDialog.show(this, "请稍后", "正在连接到创意工坊", true, true, l -> {
+            cancel = true;
+            call.cancel();
+            this.finish();
+        });
         httpClient = new OkHttpClient();
-        Intent intent = new Intent(WorkshopActivity.this, ModInfoActivity.class);
+        Intent intent = new Intent(this, ModInfoActivity.class);
 
         Request request = new Request.Builder().get().url(DOMAIN + "Index").build();
-        Call call = httpClient.newCall(request);
+        call = httpClient.newCall(request);
         call.enqueue(new Callback() {
             @Override
             public void onFailure(@NotNull Call call, @NotNull IOException e) {
+                if (cancel)
+                    return;
                 loading.dismiss();
                 runOnUiThread(() -> {
                     AlertDialog.Builder builder = new AlertDialog.Builder(WorkshopActivity.this);

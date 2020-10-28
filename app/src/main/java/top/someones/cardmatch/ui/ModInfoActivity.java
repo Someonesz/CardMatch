@@ -29,13 +29,15 @@ import java.io.File;
 import java.io.IOException;
 
 public class ModInfoActivity extends AppCompatActivity {
-    private static final String DOMAIN = "http://192.168.43.50:8080/CardMatchService/";
+    private static final String DOMAIN = "http://192.168.3.14:8080/CardMatchService/";
     private ProgressDialog loading;
     private TextView modName, modAuthor, modVersion, modShow;
     private ImageView modCover;
     private Button take;
     private OkHttpClient httpClient;
     private String uuid;
+
+    private ModLiveData mLiveData;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,6 +61,8 @@ public class ModInfoActivity extends AppCompatActivity {
         loading = ProgressDialog.show(this, "请稍后", "正在加载数据", true, false, dialog -> {
             ModInfoActivity.this.finish();
         });
+
+        mLiveData = ModLiveData.getLiveData();
 
         httpClient = new OkHttpClient();
         Request request = new Request.Builder().get().url(DOMAIN + "ModInfoServlet?uuid=" + uuid).build();
@@ -121,6 +125,11 @@ public class ModInfoActivity extends AppCompatActivity {
             } else if ("取消订阅".equals(btn.getText())) {
                 if (GameManagement.deleteMod(ModInfoActivity.this, uuid)) {
                     btn.setText("订阅");
+                    try {
+                        mLiveData.postValue(GameManagement.getMods(this));
+                    } catch (Exception e) {
+                        Toast.makeText(this, "数据更新失败", Toast.LENGTH_SHORT).show();
+                    }
                 } else {
                     Toast.makeText(this, "删除失败", Toast.LENGTH_SHORT).show();
                 }
@@ -137,6 +146,7 @@ public class ModInfoActivity extends AppCompatActivity {
                 File tmpFile = new File(this.getFileStreamPath("tmp"), uuid);
                 FileUtils.copyToFile(response.body().byteStream(), tmpFile);
                 GameManagement.installMod(this, tmpFile);
+                mLiveData.postValue(GameManagement.getMods(this));
                 runOnUiThread(() -> {
                     Toast.makeText(this, "任务完成", Toast.LENGTH_SHORT).show();
                     btn.setText("取消订阅");
