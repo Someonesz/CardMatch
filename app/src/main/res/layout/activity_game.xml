@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#F8F8EE"
+    tools:context=".ui.GameActivity">
+
+<LinearLayout
+    android:layout_marginTop="70dp"
+    android:layout_marginBottom="70dp"
+    android:paddingStart="10dp"
+    android:paddingEnd="10dp"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    >
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical" >
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="翻牌子"
+            android:textColor="#BAAC9F"
+            android:textSize="55sp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:textSize="20sp"
+            android:textColor="#BAAC9F"
+            android:text="Enjoy The Game"
+            />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="100dp"
+        android:layout_height="65dp"
+        android:orientation="vertical"
+        android:background="#BAAC9F"
+        android:layout_gravity="center"
+        android:gravity="center"
+        android:layout_marginStart="15dp" >
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="当前用时" />
+
+        <TextView
+            android:id="@+id/gameTime"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/white"
+            android:text="100" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="100dp"
+        android:layout_height="65dp"
+        android:orientation="vertical"
+        android:background="#BAAC9F"
+        android:layout_gravity="center"
+        android:gravity="center"
+        android:layout_marginStart="10dp" >
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="当前步数" />
+
+        <TextView
+            android:id="@+id/gameSteps"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/white"
+            android:text="100" />
+    </LinearLayout>
+
+</LinearLayout>
+
+
+
+    <LinearLayout
+             android:layout_width="match_parent"
+             android:layout_height="wrap_content"
+             android:orientation="vertical">
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="100dp">
+            <top.someones.cardmatch.ui.MyViewSwitcher android:id="@+id/c1" android:layout_width="0dp" android:layout_weight="1" android:layout_height="match_parent" />
+            <top.someones.cardmatch.ui.MyViewSwitcher android:id="@+id/c2" android:layout_width="0dp" android:layout_weight="1" android:layout_height="match_parent" />
+            <top.someones.cardmatch.ui.MyViewSwitcher android:id="@+id/c3" android:layout_width="0dp" android:layout_weight="1" android:layout_height="match_parent" />
+            <top.someones.cardmatch.ui.MyViewSwitcher android:id="@+id/c4" android:layout_width="0dp" android:layout_weight="1" android:layout_height="match_parent" />
+        </LinearLayout>
+        <LinearLayout
+                 android:layout_width="match_parent"
+                 android:layout_height="100dp">
+            <top.someones.cardmatch.ui.MyViewSwitcher android:id="@+id/c5" android:layout_width="0dp" android:layout_weight="1" android:layout_height="match_parent" />
+            <top.someones.cardmatch.ui.MyViewSwitcher android:id="@+id/c6" android:layout_width="0dp" android:layout_weight="1" android:layout_height="match_parent" />
+            <top.someones.cardmatch.ui.MyViewSwitcher android:id="@+id/c7" android:layout_width="0dp" android:layout_weight="1" android:layout_height="match_parent" />
+            <top.someones.cardmatch.ui.MyViewSwitcher android:id="@+id/c8" android:layout_width="0dp" android:layout_weight="1" android:layout_height="match_parent" />
+             </LinearLayout>
+    </LinearLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="100dp">
+            <top.someones.cardmatch.ui.MyViewSwitcher android:id="@+id/c9" android:layout_width="0dp" android:layout_weight="1" android:layout_height="match_parent" />
+            <top.someones.cardmatch.ui.MyViewSwitcher android:id="@+id/c10" android:layout_width="0dp" android:layout_weight="1" android:layout_height="match_parent" />
+            <top.someones.cardmatch.ui.MyViewSwitcher android:id="@+id/c11" android:layout_width="0dp" android:layout_weight="1" android:layout_height="match_parent" />
+            <top.someones.cardmatch.ui.MyViewSwitcher android:id="@+id/c12" android:layout_width="0dp" android:layout_weight="1" android:layout_height="match_parent" />
+    </LinearLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="100dp">
+            <top.someones.cardmatch.ui.MyViewSwitcher android:id="@+id/c13" android:layout_width="0dp" android:layout_weight="1" android:layout_height="match_parent" />
+            <top.someones.cardmatch.ui.MyViewSwitcher android:id="@+id/c14" android:layout_width="0dp" android:layout_weight="1" android:layout_height="match_parent" />
+            <top.someones.cardmatch.ui.MyViewSwitcher android:id="@+id/c15" android:layout_width="0dp" android:layout_weight="1" android:layout_height="match_parent" />
+            <top.someones.cardmatch.ui.MyViewSwitcher android:id="@+id/c16" android:layout_width="0dp" android:layout_weight="1" android:layout_height="match_parent" />
+    </LinearLayout>
+
+
+
+
+</LinearLayout>

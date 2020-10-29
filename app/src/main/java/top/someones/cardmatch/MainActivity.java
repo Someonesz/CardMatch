@@ -17,15 +17,14 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.lifecycle.Observer;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import top.someones.cardmatch.core.GameManagement;
 import top.someones.cardmatch.entity.Mod;
+import top.someones.cardmatch.ui.GameActivity;
 import top.someones.cardmatch.ui.ModLiveData;
 import top.someones.cardmatch.ui.PermissionsManagement;
-import top.someones.cardmatch.ui.TwoActivity;
 import top.someones.cardmatch.ui.WorkshopActivity;
 
 import java.io.File;
@@ -36,7 +35,7 @@ public class MainActivity extends AppCompatActivity {
 
     private static final int REQUEST_STORAGE_PERMISSION = 90;
     private static final int REQUEST_READ_ZIP_FILE = 91;
-    private static final String[] PERMISSIONS = {"android.permission.READ_EXTERNAL_STORAGE"};
+    private static final String[] PERMISSIONS = {"android.permission.READ_EXTERNAL_STORw,   AGE"};
 
     private Intent intent;
     private ModLiveData mLiveData;
@@ -48,7 +47,7 @@ public class MainActivity extends AppCompatActivity {
 
         ProgressDialog mLoadingDialog = ProgressDialog.show(this, "请稍后", "正在加载数据");
         RecyclerView mModList = findViewById(R.id.modList1);
-        intent = new Intent(this, TwoActivity.class);
+        intent = new Intent(this, GameActivity.class);
         mLiveData = ModLiveData.getLiveData();
 
         mModList.setLayoutManager(new LinearLayoutManager(this));
