@@ -35,9 +35,9 @@ public class MainActivity extends AppCompatActivity {
 
     private static final int REQUEST_STORAGE_PERMISSION = 90;
     private static final int REQUEST_READ_ZIP_FILE = 91;
-    private static final String[] PERMISSIONS = {"android.permission.READ_EXTERNAL_STORw,   AGE"};
+    private static final String[] PERMISSIONS = {"android.permission.READ_EXTERNAL_STORAGE"};
 
-    private Intent intent;
+    private Intent mIntent;
     private ModLiveData mLiveData;
 
     @Override
@@ -47,7 +47,7 @@ public class MainActivity extends AppCompatActivity {
 
         ProgressDialog mLoadingDialog = ProgressDialog.show(this, "请稍后", "正在加载数据");
         RecyclerView mModList = findViewById(R.id.modList1);
-        intent = new Intent(this, GameActivity.class);
+        mIntent = new Intent(this, GameActivity.class);
         mLiveData = ModLiveData.getLiveData();
 
         mModList.setLayoutManager(new LinearLayoutManager(this));
@@ -163,7 +163,7 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onBindViewHolder(@NonNull ListAdapter.ViewHolder holder, int position) {
             Mod mod = mModList[position];
-            holder.view.setOnClickListener(l -> startActivity(intent.putExtra("uuid", mod.getUUID())));
+            holder.view.setOnClickListener(l -> startActivity(mIntent.putExtra("uuid", mod.getUUID())));
             holder.modImage.setImageBitmap(mod.getImage());
             holder.modName.setText(mod.getName());
             holder.modAuthor.setText(AUTHOR + mod.getAuthor());

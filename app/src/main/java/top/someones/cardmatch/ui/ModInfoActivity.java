@@ -2,7 +2,6 @@ package top.someones.cardmatch.ui;
 
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
-import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -23,21 +22,24 @@ import top.someones.cardmatch.core.ImageCache;
 
 import org.apache.commons.io.FileUtils;
 import org.jetbrains.annotations.NotNull;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
 import java.io.IOException;
 
 public class ModInfoActivity extends AppCompatActivity {
-    private static final String DOMAIN = "http://192.168.3.14:8080/CardMatchService/";
+    private static final String DOMAIN = "http://192.168.3.14:8080/";
     private ProgressDialog loading;
+
+    private String uuid;
+    private OkHttpClient mHttpClient;
+    private boolean mCancel = false;
+    private ModLiveData mLiveData;
+
     private TextView modName, modAuthor, modVersion, modShow;
     private ImageView modCover;
     private Button take;
-    private OkHttpClient httpClient;
-    private String uuid;
-
-    private ModLiveData mLiveData;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,16 +60,21 @@ public class ModInfoActivity extends AppCompatActivity {
         modCover = findViewById(R.id.modCover);
         take = findViewById(R.id.take);
 
-        loading = ProgressDialog.show(this, "请稍后", "正在加载数据", true, false, dialog -> ModInfoActivity.this.finish());
-
         mLiveData = ModLiveData.getLiveData();
+        mHttpClient = new OkHttpClient();
+        Call call = mHttpClient.newCall(new Request.Builder().get().url(DOMAIN + uuid).build());
 
-        httpClient = new OkHttpClient();
-        Request request = new Request.Builder().get().url(DOMAIN + "ModInfoServlet?uuid=" + uuid).build();
-        Call call = httpClient.newCall(request);
+        loading = ProgressDialog.show(this, "请稍后", "正在连接到创意工坊", true, true, l -> {
+            mCancel = true;
+            call.cancel();
+            this.finish();
+        });
+
         call.enqueue(new Callback() {
             @Override
             public void onFailure(@NotNull Call call, @NotNull IOException e) {
+                if (mCancel)
+                    return;
                 loading.dismiss();
                 runOnUiThread(() -> {
                     AlertDialog.Builder builder = new AlertDialog.Builder(ModInfoActivity.this);
@@ -80,17 +87,19 @@ public class ModInfoActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onResponse(@NotNull Call call, @NotNull Response response) {
-                runOnUiThread(() -> {
-                    try {
-                        JSONObject json = new JSONObject(response.body().string());
-                        modName.setText(json.getString("Mod_Name"));
-                        modAuthor.setText(json.getString("Author"));
-                        double version = json.getDouble("Version");
+            public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+                try {
+                    JSONObject json = new JSONObject(response.body().string());
+                    String name = json.getString("Mod_Name");
+                    String author = json.getString("Author");
+                    double version = json.getDouble("Version");
+                    String show = json.getString("Show");
+                    runOnUiThread(() -> {
+                        modName.setText(name);
+                        modAuthor.setText(author);
                         modVersion.setText(version + "");
-                        modShow.setText(json.getString("Show"));
-                        Bitmap bitmap = ImageCache.getCache(uuid);
-                        modCover.setImageBitmap(bitmap);
+                        modShow.setText(show);
+                        modCover.setImageBitmap(ImageCache.getCache(uuid));
                         double ver = GameManagement.getModVersion(ModInfoActivity.this, uuid);
                         if (ver > 0) {
                             if (ver < version) {
@@ -100,17 +109,19 @@ public class ModInfoActivity extends AppCompatActivity {
                             }
                         }
                         loading.dismiss();
-                    } catch (Exception e) {
-                        runOnUiThread(() -> {
-                            AlertDialog.Builder builder = new AlertDialog.Builder(ModInfoActivity.this);
-                            builder.setTitle("错误");
-                            builder.setCancelable(false);
-                            builder.setNegativeButton("返回", (dialog, which) -> ModInfoActivity.this.finish());
-                            builder.setMessage(e.getMessage());
-                            builder.create().show();
-                        });
-                    }
-                });
+                    });
+                } catch (JSONException e) {
+                    runOnUiThread(() -> {
+                        e.printStackTrace();
+                        AlertDialog.Builder builder = new AlertDialog.Builder(ModInfoActivity.this);
+                        builder.setTitle("错误");
+                        builder.setCancelable(false);
+                        builder.setNegativeButton("返回", (dialog, which) -> ModInfoActivity.this.finish());
+                        builder.setMessage(e.getMessage());
+                        builder.create().show();
+                    });
+                    loading.dismiss();
+                }
             }
         });
 
@@ -138,9 +149,8 @@ public class ModInfoActivity extends AppCompatActivity {
 
     public void downloadAndInstall(Button btn) {
         new Thread(() -> {
-            Request down = new Request.Builder().get().url(DOMAIN + "DownloadModServlet?uuid=" + uuid).build();
             try {
-                Response response = httpClient.newCall(down).execute();
+                Response response = mHttpClient.newCall(new Request.Builder().get().url(DOMAIN + uuid + "/zip").build()).execute();
                 File tmpFile = new File(this.getFileStreamPath("tmp"), uuid);
                 FileUtils.copyToFile(response.body().byteStream(), tmpFile);
                 GameManagement.installMod(this, tmpFile);

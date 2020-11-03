@@ -29,34 +29,33 @@ import org.json.JSONObject;
 import java.io.IOException;
 
 public class WorkshopActivity extends AppCompatActivity {
-    private static final String DOMAIN = "http://192.168.3.14:8080/CardMatchService/";
-    private OkHttpClient httpClient;
-    private RecyclerView modList;
+    private static final String DOMAIN = "http://192.168.3.14:8080/";
+
     private ProgressDialog loading;
-    private boolean cancel = false;
-    private Call call;
+    private OkHttpClient mHttpClient;
+    private boolean mCancel = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_workshop);
 
-        modList = findViewById(R.id.modList);
+        RecyclerView modList = findViewById(R.id.modList);
         modList.setLayoutManager(new LinearLayoutManager(this));
+
+        Intent intent = new Intent(this, ModInfoActivity.class);
+        mHttpClient = new OkHttpClient();
+        Call call = mHttpClient.newCall(new Request.Builder().get().url(DOMAIN + "hot").build());
         loading = ProgressDialog.show(this, "请稍后", "正在连接到创意工坊", true, true, l -> {
-            cancel = true;
+            mCancel = true;
             call.cancel();
             this.finish();
         });
-        httpClient = new OkHttpClient();
-        Intent intent = new Intent(this, ModInfoActivity.class);
 
-        Request request = new Request.Builder().get().url(DOMAIN + "Index").build();
-        call = httpClient.newCall(request);
         call.enqueue(new Callback() {
             @Override
             public void onFailure(@NotNull Call call, @NotNull IOException e) {
-                if (cancel)
+                if (mCancel)
                     return;
                 loading.dismiss();
                 runOnUiThread(() -> {
@@ -75,14 +74,14 @@ public class WorkshopActivity extends AppCompatActivity {
                 try {
                     String html = response.body().string();
                     Log.d("netd", html);
-                    JSONObject json = new JSONObject(html);
-                    JSONArray jarr = json.getJSONArray("hot");
-                    Mod[] mods = new Mod[jarr.length()];
-                    for (int i = 0; i < jarr.length(); i++) {
-                        mods[i] = jsonToMod(jarr.getJSONObject(i));
+                    JSONArray json = new JSONArray(html);
+                    Mod[] mods = new Mod[json.length()];
+                    for (int i = 0; i < json.length(); i++) {
+                        mods[i] = jsonToMod(json.getJSONObject(i));
                     }
                     runOnUiThread(() -> modList.setAdapter(new ModAdapter(mods, v -> startActivity(intent.putExtra("uuid", v.getUUID())))));
                 } catch (Exception e) {
+                    e.printStackTrace();
                     runOnUiThread(() -> {
                         AlertDialog.Builder builder = new AlertDialog.Builder(WorkshopActivity.this);
                         builder.setTitle("错误");
@@ -100,7 +99,7 @@ public class WorkshopActivity extends AppCompatActivity {
         String uuid = json.getString("UUID");
         Bitmap bitmap = ImageCache.getCache(uuid);
         if (bitmap == null) {
-            Call imageCall = httpClient.newCall(new Request.Builder().get().url(DOMAIN + "GetImgBinServlet?uuid=" + uuid).build());
+            Call imageCall = mHttpClient.newCall(new Request.Builder().get().url(DOMAIN + uuid + "/img").build());
             Response imageResponse = imageCall.execute();
             bitmap = BitmapFactory.decodeStream(imageResponse.body().byteStream());
             if (bitmap != null) {
