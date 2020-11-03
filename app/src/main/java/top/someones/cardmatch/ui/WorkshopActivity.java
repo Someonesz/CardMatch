@@ -29,7 +29,7 @@ import org.json.JSONObject;
 import java.io.IOException;
 
 public class WorkshopActivity extends AppCompatActivity {
-    private static final String DOMAIN = "http://192.168.3.14:8080/";
+    private static final String HOSTS = "http://192.168.3.14:8080/mod/";
 
     private ProgressDialog loading;
     private OkHttpClient mHttpClient;
@@ -45,7 +45,7 @@ public class WorkshopActivity extends AppCompatActivity {
 
         Intent intent = new Intent(this, ModInfoActivity.class);
         mHttpClient = new OkHttpClient();
-        Call call = mHttpClient.newCall(new Request.Builder().get().url(DOMAIN + "hot").build());
+        Call call = mHttpClient.newCall(new Request.Builder().get().url(HOSTS + "hot").build());
         loading = ProgressDialog.show(this, "请稍后", "正在连接到创意工坊", true, true, l -> {
             mCancel = true;
             call.cancel();
@@ -99,7 +99,7 @@ public class WorkshopActivity extends AppCompatActivity {
         String uuid = json.getString("UUID");
         Bitmap bitmap = ImageCache.getCache(uuid);
         if (bitmap == null) {
-            Call imageCall = mHttpClient.newCall(new Request.Builder().get().url(DOMAIN + uuid + "/img").build());
+            Call imageCall = mHttpClient.newCall(new Request.Builder().get().url(HOSTS + uuid + "/img").build());
             Response imageResponse = imageCall.execute();
             bitmap = BitmapFactory.decodeStream(imageResponse.body().byteStream());
             if (bitmap != null) {

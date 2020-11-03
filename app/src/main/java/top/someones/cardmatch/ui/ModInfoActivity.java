@@ -29,7 +29,7 @@ import java.io.File;
 import java.io.IOException;
 
 public class ModInfoActivity extends AppCompatActivity {
-    private static final String DOMAIN = "http://192.168.3.14:8080/";
+    private static final String HOSTS = "http://192.168.3.14:8080/mod/";
     private ProgressDialog loading;
 
     private String uuid;
@@ -62,7 +62,7 @@ public class ModInfoActivity extends AppCompatActivity {
 
         mLiveData = ModLiveData.getLiveData();
         mHttpClient = new OkHttpClient();
-        Call call = mHttpClient.newCall(new Request.Builder().get().url(DOMAIN + uuid).build());
+        Call call = mHttpClient.newCall(new Request.Builder().get().url(HOSTS + uuid).build());
 
         loading = ProgressDialog.show(this, "请稍后", "正在连接到创意工坊", true, true, l -> {
             mCancel = true;
@@ -150,7 +150,7 @@ public class ModInfoActivity extends AppCompatActivity {
     public void downloadAndInstall(Button btn) {
         new Thread(() -> {
             try {
-                Response response = mHttpClient.newCall(new Request.Builder().get().url(DOMAIN + uuid + "/zip").build()).execute();
+                Response response = mHttpClient.newCall(new Request.Builder().get().url(HOSTS + uuid + "/zip").build()).execute();
                 File tmpFile = new File(this.getFileStreamPath("tmp"), uuid);
                 FileUtils.copyToFile(response.body().byteStream(), tmpFile);
                 GameManagement.installMod(this, tmpFile);
