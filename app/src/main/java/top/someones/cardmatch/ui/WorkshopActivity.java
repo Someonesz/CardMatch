@@ -29,7 +29,7 @@ import org.json.JSONObject;
 import java.io.IOException;
 
 public class WorkshopActivity extends AppCompatActivity {
-    private static final String HOSTS = "http://192.168.3.14:8080/mod/";
+    private static final String HOSTS = "http://someones.top:12450/mod/";
 
     private ProgressDialog loading;
     private OkHttpClient mHttpClient;

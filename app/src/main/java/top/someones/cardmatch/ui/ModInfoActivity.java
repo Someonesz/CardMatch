@@ -29,13 +29,13 @@ import java.io.File;
 import java.io.IOException;
 
 public class ModInfoActivity extends AppCompatActivity {
-    private static final String HOSTS = "http://192.168.3.14:8080/mod/";
-    private ProgressDialog loading;
+    private static final String HOSTS = "http://someones.top:12450/mod/";
 
-    private String uuid;
+    private ProgressDialog loading;
     private OkHttpClient mHttpClient;
     private boolean mCancel = false;
     private ModLiveData mLiveData;
+    private String uuid;
 
     private TextView modName, modAuthor, modVersion, modShow;
     private ImageView modCover;
