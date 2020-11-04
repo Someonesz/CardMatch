@@ -63,18 +63,18 @@ public class GameManagement {
         if (config == null)
             throw new Exception("读取配置文件失败");
 
-        String uuid = config.getString("UUID");
-        String name = config.getString("Mod_Name");
-        String author = config.getString("Author");
-        String version = config.getString("Version");
-        String frontImageName = config.getString("FrontImageName");
-        JSONArray backImageName = config.getJSONArray("BackImageName");
+        String uuid = config.getString("uuid");
+        String name = config.getString("name");
+        String author = config.getString("author");
+        String version = config.getString("version");
+        String frontImageName = config.getString("frontImageName");
+        JSONArray backImageName = config.getJSONArray("backImageName");
         String show = null;
-        if (config.has("Show"))
-            show = config.getString("Show");
+        if (config.has("show"))
+            show = config.getString("show");
         String cover = null;
-        if (config.has("Cover"))
-            cover = config.getString("Cover");
+        if (config.has("cover"))
+            cover = config.getString("cover");
         if (backImageName.length() < GameObserver.MAX_VIEW / 2)
             throw new Exception("Mod图片太少");
 
@@ -122,7 +122,7 @@ public class GameManagement {
             SQLiteDatabase db = helper.getReadableDatabase();
             try (Cursor cursor = db.rawQuery(SQL.FIND_MOD_VERSION, new String[]{uuid})) {
                 if (cursor.moveToNext()) {
-                    return cursor.getDouble(cursor.getColumnIndex("Version"));
+                    return cursor.getDouble(cursor.getColumnIndex("version"));
                 } else {
                     return -1;
                 }
@@ -140,19 +140,19 @@ public class GameManagement {
                 List<Mod> list = new LinkedList<>();
                 while (cursor.moveToNext()) {
                     String uuid = cursor.getString(cursor.getColumnIndex("uuid"));
-                    String name = cursor.getString(cursor.getColumnIndex("Name"));
-                    String author = cursor.getString(cursor.getColumnIndex("Author"));
-                    String show = cursor.getString(cursor.getColumnIndex("Show"));
-                    Double version = cursor.getDouble(cursor.getColumnIndex("Version"));
-                    String resPath = cursor.getString(cursor.getColumnIndex("ResPath"));
+                    String name = cursor.getString(cursor.getColumnIndex("name"));
+                    String author = cursor.getString(cursor.getColumnIndex("author"));
+                    String show = cursor.getString(cursor.getColumnIndex("show"));
+                    Double version = cursor.getDouble(cursor.getColumnIndex("version"));
+                    String resPath = cursor.getString(cursor.getColumnIndex("resPath"));
                     Bitmap bitmap = ImageCache.getCache(uuid);
                     if (bitmap == null) {
-                        String cover = cursor.getString(cursor.getColumnIndex("Cover"));
+                        String cover = cursor.getString(cursor.getColumnIndex("cover"));
                         if (cover != null) {
                             bitmap = BitmapFactory.decodeFile(resPath + "/" + cover);
                         }
                         if (bitmap == null) {
-                            String backRes = cursor.getString(cursor.getColumnIndex("BackRes"));
+                            String backRes = cursor.getString(cursor.getColumnIndex("backRes"));
                             String[] subString = backRes.split(":");
                             bitmap = BitmapFactory.decodeFile(resPath + "/" + subString[random.nextInt(subString.length)]);
                         }
@@ -177,9 +177,9 @@ public class GameManagement {
             SQLiteDatabase db = helper.getReadableDatabase();
             try (Cursor cursor = db.rawQuery(SQL.INIT_GAME, new String[]{uuid})) {
                 if (cursor.moveToNext()) {
-                    resPath = cursor.getString(cursor.getColumnIndex("ResPath"));
-                    frontResName = cursor.getString(cursor.getColumnIndex("FrontRes"));
-                    backResName = cursor.getString(cursor.getColumnIndex("BackRes")).split(":");
+                    resPath = cursor.getString(cursor.getColumnIndex("resPath"));
+                    frontResName = cursor.getString(cursor.getColumnIndex("frontRes"));
+                    backResName = cursor.getString(cursor.getColumnIndex("backRes")).split(":");
                 } else return null;
             }
         }
@@ -261,7 +261,7 @@ public class GameManagement {
         }
         try {
             JSONObject config = new JSONObject(readTextFile(zipFile.getInputStream(zipEntry)));
-            if ("Card Match".equals(config.getString("for")) && config.has("Mod_Name") && config.has("Author") && config.has("Version") && config.has("FrontImageName") && config.has("BackImageName")) {
+            if ("Card Match".equals(config.getString("for")) && config.has("name") && config.has("author") && config.has("version") && config.has("frontImageName") && config.has("backImageName")) {
                 return config;
             } else
                 return null;
@@ -284,11 +284,11 @@ public class GameManagement {
     }
 
     private static final class SQL {
-        private static final String ADD_MOD = "INSERT INTO Resources (uuid,Name,Author,Show,Version,ResPath,Cover,FrontRes,BackRes) VALUES (?,?,?,?,?,?,?,?,?)";
-        private static final String SELECT_ALL_MOD = "SELECT uuid,Name,Author,Show,Version,ResPath,Cover,BackRes FROM Resources ORDER BY Weight DESC";
+        private static final String ADD_MOD = "INSERT INTO Resources (uuid,name,author,show,version,resPath,cover,frontRes,backRes) VALUES (?,?,?,?,?,?,?,?,?)";
+        private static final String SELECT_ALL_MOD = "SELECT uuid,name,author,show,version,resPath,cover,backRes FROM Resources ORDER BY Weight DESC";
         private static final String DELETE_MOD = "DELETE FROM Resources WHERE UUID = ?";
-        private static final String FIND_MOD_VERSION = "SELECT Version FROM Resources WHERE uuid = ?";
-        private static final String INIT_GAME = "SELECT Name,Author,Show,Version,ResPath,FrontRes,BackRes FROM Resources WHERE uuid = ?";
+        private static final String FIND_MOD_VERSION = "SELECT version FROM Resources WHERE uuid = ?";
+        private static final String INIT_GAME = "SELECT name,author,show,version,resPath,frontRes,backRes FROM Resources WHERE uuid = ?";
     }
 
     private static class GameObserverAdaptor extends BaseGameObserver {

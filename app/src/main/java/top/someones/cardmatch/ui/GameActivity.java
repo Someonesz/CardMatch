@@ -16,14 +16,16 @@ import android.widget.Toast;
 
 public class GameActivity extends AppCompatActivity {
 
-    private final MyViewSwitcher[] switchers = new MyViewSwitcher[16];
     private GameObserver gameObserver;
     private int mSelect1 = -1, mSelect2 = -1;
     private boolean isNewGame = true;
     private int mGameSteps = 0;
     private long mStartTime;
-    private TextView mGameTime_tv, mGameSteps_tv;
+    
     private Thread mGameTimeThread;
+
+    private final MyViewSwitcher[] switchers = new MyViewSwitcher[16];
+    private TextView mGameTime_tv, mGameSteps_tv;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

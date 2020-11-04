@@ -14,6 +14,7 @@ import android.view.KeyEvent;
 import android.view.View;
 import android.widget.Toast;
 
+@Deprecated
 public class TwoActivity extends AppCompatActivity {
 
     private final MyViewSwitcher[] switchers = new MyViewSwitcher[16];

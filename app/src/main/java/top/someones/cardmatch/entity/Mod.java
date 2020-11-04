@@ -3,7 +3,7 @@ package top.someones.cardmatch.entity;
 import android.graphics.Bitmap;
 
 public class Mod {
-    private final String UUID;
+    private final String uuid;
     private final String name;
     private final Bitmap image;
     private final String author;
@@ -11,7 +11,7 @@ public class Mod {
     private final String show;
 
     public Mod(String uuid, String name, Bitmap image, String author, Double version, String show) {
-        UUID = uuid;
+        this.uuid = uuid;
         this.name = name;
         this.image = image;
         this.author = author;
@@ -20,7 +20,7 @@ public class Mod {
     }
 
     public String getUUID() {
-        return UUID;
+        return uuid;
     }
 
     public String getName() {

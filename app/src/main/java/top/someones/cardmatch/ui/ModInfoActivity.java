@@ -90,10 +90,10 @@ public class ModInfoActivity extends AppCompatActivity {
             public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
                 try {
                     JSONObject json = new JSONObject(response.body().string());
-                    String name = json.getString("Mod_Name");
-                    String author = json.getString("Author");
-                    double version = json.getDouble("Version");
-                    String show = json.getString("Show");
+                    String name = json.getString("name");
+                    String author = json.getString("author");
+                    double version = json.getDouble("version");
+                    String show = json.getString("show");
                     runOnUiThread(() -> {
                         modName.setText(name);
                         modAuthor.setText(author);
@@ -162,10 +162,10 @@ public class ModInfoActivity extends AppCompatActivity {
                 });
             } catch (IOException e) {
                 e.printStackTrace();
-                runOnUiThread(() -> Toast.makeText(this, "下载失败" + e.getMessage(), Toast.LENGTH_SHORT).show());
+                runOnUiThread(() -> Toast.makeText(this, "下载失败：" + e.getMessage(), Toast.LENGTH_SHORT).show());
             } catch (Exception e) {
                 e.printStackTrace();
-                runOnUiThread(() -> Toast.makeText(this, "MOD安装失败" + e.getMessage(), Toast.LENGTH_SHORT).show());
+                runOnUiThread(() -> Toast.makeText(this, "MOD安装失败：" + e.getMessage(), Toast.LENGTH_SHORT).show());
             }
         }).start();
     }

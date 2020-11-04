@@ -96,7 +96,7 @@ public class WorkshopActivity extends AppCompatActivity {
     }
 
     private Mod jsonToMod(JSONObject json) throws Exception {
-        String uuid = json.getString("UUID");
+        String uuid = json.getString("uuid");
         Bitmap bitmap = ImageCache.getCache(uuid);
         if (bitmap == null) {
             Call imageCall = mHttpClient.newCall(new Request.Builder().get().url(HOSTS + uuid + "/img").build());
@@ -106,7 +106,7 @@ public class WorkshopActivity extends AppCompatActivity {
                 ImageCache.addWorkshopCache(uuid, bitmap);
             }
         }
-        return new Mod(uuid, json.getString("Mod_Name"), bitmap, json.getString("Author"), json.getDouble("Version"), null);
+        return new Mod(uuid, json.getString("name"), bitmap, json.getString("author"), json.getDouble("version"), null);
     }
 
     @Override
