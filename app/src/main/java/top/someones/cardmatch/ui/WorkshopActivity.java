@@ -30,86 +30,94 @@ import java.io.IOException;
 public class WorkshopActivity extends AppCompatActivity {
     private static final String HOSTS = "http://someones.top:12450/mod/";
 
-    private ProgressDialog loading;
+    private ProgressDialog mLoadingDialog;
     private OkHttpClient mHttpClient;
     private boolean mCancel = false;
+
+    private RecyclerView mModListView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_workshop);
 
-        RecyclerView modList = findViewById(R.id.modList);
-        modList.setLayoutManager(new LinearLayoutManager(this));
+        //初始化列表
+        mModListView = findViewById(R.id.modList);
+        mModListView.setLayoutManager(new LinearLayoutManager(this));
 
-        Intent intent = new Intent(this, ModInfoActivity.class);
+        //连接后端服务
         mHttpClient = new OkHttpClient();
         Call call = mHttpClient.newCall(new Request.Builder().get().url(HOSTS + "hot").build());
-        loading = ProgressDialog.show(this, "请稍后", "正在连接到创意工坊", true, true, l -> {
+        call.enqueue(new HttpCallback());
+
+        //显示进度条
+        mLoadingDialog = ProgressDialog.show(this, "请稍后", "正在连接到创意工坊", true, true, l -> {
             mCancel = true;
             call.cancel();
             this.finish();
         });
+    }
 
-        call.enqueue(new Callback() {
-            @Override
-            public void onFailure(@NotNull Call call, @NotNull IOException e) {
-                if (mCancel)
-                    return;
+    @Override
+    protected void onDestroy() {
+        //销毁时清除图片缓存
+        ImageCache.cleanWorkshopCache();
+        super.onDestroy();
+    }
+
+    private class HttpCallback implements Callback {
+
+        @Override
+        public void onFailure(@NotNull Call call, @NotNull IOException e) {
+            mLoadingDialog.dismiss();
+            if (mCancel)
+                return;
+            runOnUiThread(() -> {
+                AlertDialog.Builder builder = new AlertDialog.Builder(WorkshopActivity.this);
+                builder.setTitle("网络错误");
+                builder.setCancelable(false);
+                builder.setNegativeButton("返回", (dialog, which) -> WorkshopActivity.this.finish());
+                builder.setMessage(e.getMessage());
+                builder.create().show();
+            });
+        }
+
+        @Override
+        public void onResponse(@NotNull Call call, @NotNull Response response) {
+            try {
+                String html = response.body().string();
+                JSONArray json = new JSONArray(html);
+                Mod[] mods = new Mod[json.length()];
+                for (int i = 0; i < json.length(); i++) {
+                    JSONObject jsonItem = json.getJSONObject(i);
+                    String uuid = jsonItem.getString("uuid");
+                    //尝试从缓存中获取图片
+                    Bitmap bitmap = ImageCache.getCache(uuid);
+                    if (bitmap == null) {
+                        //缓存中没有相应的图片，从后端获取
+                        Call imageCall = mHttpClient.newCall(new Request.Builder().get().url(HOSTS + uuid + "/img").build());
+                        Response imageResponse = imageCall.execute();
+                        bitmap = BitmapFactory.decodeStream(imageResponse.body().byteStream());
+                        if (bitmap != null) {
+                            ImageCache.addWorkshopCache(uuid, bitmap);
+                        }
+                    }
+                    mods[i] = new Mod(uuid, jsonItem.getString("name"), bitmap, jsonItem.getString("author"), jsonItem.getDouble("version"), null);
+                }
+                Intent intent = new Intent(WorkshopActivity.this, ModInfoActivity.class);
+                runOnUiThread(() -> mModListView.setAdapter(new ModAdapter(mods, mod -> startActivity(intent.putExtra("uuid", mod.getUUID())))));
+            } catch (Exception e) {
+                e.printStackTrace();
                 runOnUiThread(() -> {
                     AlertDialog.Builder builder = new AlertDialog.Builder(WorkshopActivity.this);
-                    builder.setTitle("网络错误");
+                    builder.setTitle("错误");
                     builder.setCancelable(false);
                     builder.setNegativeButton("返回", (dialog, which) -> WorkshopActivity.this.finish());
                     builder.setMessage(e.getMessage());
                     builder.create().show();
                 });
-                loading.dismiss();
             }
-
-            @Override
-            public void onResponse(@NotNull Call call, @NotNull Response response) {
-                try {
-                    String html = response.body().string();
-                    JSONArray json = new JSONArray(html);
-                    Mod[] mods = new Mod[json.length()];
-                    for (int i = 0; i < json.length(); i++) {
-                        mods[i] = jsonToMod(json.getJSONObject(i));
-                    }
-                    runOnUiThread(() -> modList.setAdapter(new ModAdapter(mods, v -> startActivity(intent.putExtra("uuid", v.getUUID())))));
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    runOnUiThread(() -> {
-                        AlertDialog.Builder builder = new AlertDialog.Builder(WorkshopActivity.this);
-                        builder.setTitle("错误");
-                        builder.setCancelable(false);
-                        builder.setNegativeButton("返回", (dialog, which) -> WorkshopActivity.this.finish());
-                        builder.setMessage(e.getMessage());
-                        builder.create().show();
-                    });
-                }
-                loading.dismiss();
-            }
-        });
-    }
-
-    private Mod jsonToMod(JSONObject json) throws Exception {
-        String uuid = json.getString("uuid");
-        Bitmap bitmap = ImageCache.getCache(uuid);
-        if (bitmap == null) {
-            Call imageCall = mHttpClient.newCall(new Request.Builder().get().url(HOSTS + uuid + "/img").build());
-            Response imageResponse = imageCall.execute();
-            bitmap = BitmapFactory.decodeStream(imageResponse.body().byteStream());
-            if (bitmap != null) {
-                ImageCache.addWorkshopCache(uuid, bitmap);
-            }
+            mLoadingDialog.dismiss();
         }
-        return new Mod(uuid, json.getString("name"), bitmap, json.getString("author"), json.getDouble("version"), null);
-    }
-
-    @Override
-    protected void onDestroy() {
-        ImageCache.cleanWorkshopCache();
-        super.onDestroy();
     }
 }
