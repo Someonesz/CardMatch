@@ -6,7 +6,6 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
-import android.util.Log;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -57,7 +56,6 @@ public class WorkshopActivity extends AppCompatActivity {
             public void onFailure(@NotNull Call call, @NotNull IOException e) {
                 if (mCancel)
                     return;
-                loading.dismiss();
                 runOnUiThread(() -> {
                     AlertDialog.Builder builder = new AlertDialog.Builder(WorkshopActivity.this);
                     builder.setTitle("网络错误");
@@ -66,14 +64,13 @@ public class WorkshopActivity extends AppCompatActivity {
                     builder.setMessage(e.getMessage());
                     builder.create().show();
                 });
+                loading.dismiss();
             }
 
             @Override
             public void onResponse(@NotNull Call call, @NotNull Response response) {
-                loading.dismiss();
                 try {
                     String html = response.body().string();
-                    Log.d("netd", html);
                     JSONArray json = new JSONArray(html);
                     Mod[] mods = new Mod[json.length()];
                     for (int i = 0; i < json.length(); i++) {
@@ -91,6 +88,7 @@ public class WorkshopActivity extends AppCompatActivity {
                         builder.create().show();
                     });
                 }
+                loading.dismiss();
             }
         });
     }
