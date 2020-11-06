@@ -98,9 +98,7 @@ public class WorkshopActivity extends AppCompatActivity {
                         Call imageCall = mHttpClient.newCall(new Request.Builder().get().url(HOSTS + uuid + "/img").build());
                         Response imageResponse = imageCall.execute();
                         bitmap = BitmapFactory.decodeStream(imageResponse.body().byteStream());
-                        if (bitmap != null) {
-                            ImageCache.addWorkshopCache(uuid, bitmap);
-                        }
+                        ImageCache.addWorkshopCache(uuid, bitmap);
                     }
                     mods[i] = new Mod(uuid, jsonItem.getString("name"), bitmap, jsonItem.getString("author"), jsonItem.getDouble("version"), null);
                 }

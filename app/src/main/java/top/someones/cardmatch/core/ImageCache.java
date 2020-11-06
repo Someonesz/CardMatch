@@ -21,6 +21,8 @@ public class ImageCache {
     }
 
     public static void addWorkshopCache(String uuid, Bitmap bitmap) {
+        if (uuid == null || bitmap == null)
+            return;
         mWorkshopCache.put(uuid, bitmap);
     }
 
