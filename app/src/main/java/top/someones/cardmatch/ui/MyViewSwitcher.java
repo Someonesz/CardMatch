@@ -57,7 +57,7 @@ public class MyViewSwitcher extends FrameLayout {
         super.addView(v1, getLayoutParams(v1));
         super.addView(v2, getLayoutParams(v2));
         View bgView = new View(mContext);
-        bgView.setBackgroundResource(R.drawable.bg);
+        bgView.setBackgroundResource(R.drawable.rounded_red_border);
         bgView.setAlpha(0.5f);
         bgView.setVisibility(GONE);
         super.addView(bgView, getLayoutParams(bgView));
