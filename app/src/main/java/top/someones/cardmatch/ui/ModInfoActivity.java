@@ -31,109 +31,74 @@ import java.io.IOException;
 public class ModInfoActivity extends AppCompatActivity {
     private static final String HOSTS = "http://someones.top:12450/mod/";
 
-    private ProgressDialog loading;
+    private String uuid;
+    private ProgressDialog mLoadingDialog;
     private OkHttpClient mHttpClient;
     private boolean mCancel = false;
     private ModLiveData mLiveData;
-    private String uuid;
 
-    private TextView modName, modAuthor, modVersion, modShow;
-    private ImageView modCover;
-    private Button take;
+    private TextView mNameView, mAuthorView, mVersionView, mShowView;
+    private ImageView mCoverView;
+    private Button mTakeView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_mod_info);
 
-        String uuid = getIntent().getStringExtra("uuid");
+        uuid = getIntent().getStringExtra("uuid");
         if (uuid == null) {
             Toast.makeText(this, "传入数据为空", Toast.LENGTH_SHORT).show();
             this.finish();
             return;
         }
-        this.uuid = uuid;
-        modName = findViewById(R.id.modName);
-        modAuthor = findViewById(R.id.modAuthor);
-        modVersion = findViewById(R.id.modVersion);
-        modShow = findViewById(R.id.modShow);
-        modCover = findViewById(R.id.modCover);
-        take = findViewById(R.id.take);
 
-        mLiveData = ModLiveData.getLiveData();
+        mNameView = findViewById(R.id.mod_name);
+        mAuthorView = findViewById(R.id.mod_author);
+        mVersionView = findViewById(R.id.mod_version);
+        mShowView = findViewById(R.id.mod_show);
+        mCoverView = findViewById(R.id.mod_cover);
+        mTakeView = findViewById(R.id.take);
+
         mHttpClient = new OkHttpClient();
         Call call = mHttpClient.newCall(new Request.Builder().get().url(HOSTS + uuid).build());
+        call.enqueue(new HttpCallback());
 
-        loading = ProgressDialog.show(this, "请稍后", "正在连接到创意工坊", true, true, l -> {
+        mLoadingDialog = ProgressDialog.show(this, "请稍后", "正在连接到创意工坊", true, true, l -> {
             mCancel = true;
             call.cancel();
             this.finish();
         });
 
-        call.enqueue(new Callback() {
-            @Override
-            public void onFailure(@NotNull Call call, @NotNull IOException e) {
-                if (mCancel)
-                    return;
-                loading.dismiss();
-                runOnUiThread(() -> {
-                    AlertDialog.Builder builder = new AlertDialog.Builder(ModInfoActivity.this);
-                    builder.setTitle("网络错误");
-                    builder.setCancelable(false);
-                    builder.setNegativeButton("返回", (dialog, which) -> ModInfoActivity.this.finish());
-                    builder.setMessage(e.getMessage());
-                    builder.create().show();
-                });
-            }
+        mLiveData = ModLiveData.getLiveData();
 
-            @Override
-            public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
-                try {
-                    JSONObject json = new JSONObject(response.body().string());
-                    String name = json.getString("name");
-                    String author = json.getString("author");
-                    double version = json.getDouble("version");
-                    String show = json.getString("show");
-                    runOnUiThread(() -> {
-                        modName.setText(name);
-                        modAuthor.setText(author);
-                        modVersion.setText(version + "");
-                        modShow.setText(show);
-                        modCover.setImageBitmap(ImageCache.getCache(uuid));
-                        double ver = GameManagement.getModVersion(ModInfoActivity.this, uuid);
-                        if (ver > 0) {
-                            if (ver < version) {
-                                take.setText("更新");
-                            } else {
-                                take.setText("取消订阅");
-                            }
-                        }
-                        loading.dismiss();
-                    });
-                } catch (JSONException e) {
-                    runOnUiThread(() -> {
-                        e.printStackTrace();
-                        AlertDialog.Builder builder = new AlertDialog.Builder(ModInfoActivity.this);
-                        builder.setTitle("错误");
-                        builder.setCancelable(false);
-                        builder.setNegativeButton("返回", (dialog, which) -> ModInfoActivity.this.finish());
-                        builder.setMessage(e.getMessage());
-                        builder.create().show();
-                    });
-                    loading.dismiss();
-                }
-            }
-        });
-
-        take.setOnClickListener(v -> {
-            Button btn = (Button) v;
-            btn.setEnabled(false);
-            if ("订阅".contentEquals(btn.getText()) || "更新".contentEquals(btn.getText())) {
+        mTakeView.setOnClickListener(v -> {
+            mTakeView.setEnabled(false);
+            if ("订阅".contentEquals(mTakeView.getText()) || "更新".contentEquals(mTakeView.getText())) {
                 Toast.makeText(this, "正在下载", Toast.LENGTH_SHORT).show();
-                downloadAndInstall(btn);
-            } else if ("取消订阅".contentEquals(btn.getText())) {
+                new Thread(() -> {
+                    try {
+                        Response response = mHttpClient.newCall(new Request.Builder().get().url(HOSTS + uuid + "/zip").build()).execute();
+                        File tmpFile = new File(ModInfoActivity.this.getFileStreamPath("tmp"), uuid);
+                        FileUtils.copyToFile(response.body().byteStream(), tmpFile);
+                        GameManagement.installMod(this, tmpFile);
+                        mLiveData.postValue(GameManagement.getMods(this));
+                        runOnUiThread(() -> {
+                            Toast.makeText(this, "任务完成", Toast.LENGTH_SHORT).show();
+                            mTakeView.setText("取消订阅");
+                            mTakeView.setEnabled(true);
+                        });
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        runOnUiThread(() -> Toast.makeText(this, "下载失败：" + e.getMessage(), Toast.LENGTH_SHORT).show());
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        runOnUiThread(() -> Toast.makeText(this, "MOD安装失败：" + e.getMessage(), Toast.LENGTH_SHORT).show());
+                    }
+                }).start();
+            } else if ("取消订阅".contentEquals(mTakeView.getText())) {
                 if (GameManagement.deleteMod(ModInfoActivity.this, uuid)) {
-                    btn.setText("订阅");
+                    mTakeView.setText("订阅");
                     try {
                         mLiveData.postValue(GameManagement.getMods(this));
                     } catch (Exception e) {
@@ -142,32 +107,64 @@ public class ModInfoActivity extends AppCompatActivity {
                 } else {
                     Toast.makeText(this, "删除失败", Toast.LENGTH_SHORT).show();
                 }
-                btn.setEnabled(true);
+                mTakeView.setEnabled(true);
             }
         });
     }
 
-    public void downloadAndInstall(Button btn) {
-        new Thread(() -> {
+    private class HttpCallback implements Callback {
+
+        @Override
+        public void onFailure(@NotNull Call call, @NotNull IOException e) {
+            mLoadingDialog.dismiss();
+            if (mCancel)
+                return;
+            runOnUiThread(() -> {
+                AlertDialog.Builder builder = new AlertDialog.Builder(ModInfoActivity.this);
+                builder.setTitle("网络错误");
+                builder.setCancelable(false);
+                builder.setNegativeButton("返回", (dialog, which) -> ModInfoActivity.this.finish());
+                builder.setMessage(e.getMessage());
+                builder.create().show();
+            });
+        }
+
+        @Override
+        public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
             try {
-                Response response = mHttpClient.newCall(new Request.Builder().get().url(HOSTS + uuid + "/zip").build()).execute();
-                File tmpFile = new File(this.getFileStreamPath("tmp"), uuid);
-                FileUtils.copyToFile(response.body().byteStream(), tmpFile);
-                GameManagement.installMod(this, tmpFile);
-                mLiveData.postValue(GameManagement.getMods(this));
+                JSONObject json = new JSONObject(response.body().string());
+                String name = json.getString("name");
+                String author = json.getString("author");
+                double version = json.getDouble("version");
+                String show = json.getString("show");
                 runOnUiThread(() -> {
-                    Toast.makeText(this, "任务完成", Toast.LENGTH_SHORT).show();
-                    btn.setText("取消订阅");
-                    btn.setEnabled(true);
+                    mNameView.setText(name);
+                    mAuthorView.setText(author);
+                    mVersionView.setText(String.valueOf(version));
+                    mShowView.setText(show);
+                    mCoverView.setImageBitmap(ImageCache.getCache(uuid));
+                    double ver = GameManagement.getModVersion(ModInfoActivity.this, uuid);
+                    if (ver > 0) {
+                        if (ver < version) {
+                            mTakeView.setText("更新");
+                        } else {
+                            mTakeView.setText("取消订阅");
+                        }
+                    }
                 });
-            } catch (IOException e) {
+            } catch (JSONException e) {
                 e.printStackTrace();
-                runOnUiThread(() -> Toast.makeText(this, "下载失败：" + e.getMessage(), Toast.LENGTH_SHORT).show());
-            } catch (Exception e) {
-                e.printStackTrace();
-                runOnUiThread(() -> Toast.makeText(this, "MOD安装失败：" + e.getMessage(), Toast.LENGTH_SHORT).show());
+                runOnUiThread(() -> {
+                    AlertDialog.Builder builder = new AlertDialog.Builder(ModInfoActivity.this);
+                    builder.setTitle("错误");
+                    builder.setCancelable(false);
+                    builder.setNegativeButton("返回", (dialog, which) -> ModInfoActivity.this.finish());
+                    builder.setMessage(e.getMessage());
+                    builder.create().show();
+                });
             }
-        }).start();
+            mLoadingDialog.dismiss();
+        }
     }
 
 }
