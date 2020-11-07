@@ -13,20 +13,12 @@ import top.someones.cardmatch.entity.Mod;;
 
 public class ModAdapter extends RecyclerView.Adapter<ModAdapter.ViewHolder> {
 
-    private static final String AUTHOR = "作者：";
-    private static final String VERSION = "版本：";
-
     private final Mod[] mModList;
-    private final ModOnClickListener mModOnClickListener;
-
-    public ModAdapter(Mod[] modList) {
-        this.mModList = modList;
-        this.mModOnClickListener = null;
-    }
+    private final ModOnClickListener mOnClickListener;
 
     public ModAdapter(Mod[] modList, ModOnClickListener modOnClickListener) {
         this.mModList = modList;
-        this.mModOnClickListener = modOnClickListener;
+        this.mOnClickListener = modOnClickListener;
     }
 
     @NonNull
@@ -39,15 +31,15 @@ public class ModAdapter extends RecyclerView.Adapter<ModAdapter.ViewHolder> {
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         Mod mod = mModList[position];
-        if (mModOnClickListener != null) {
+        if (mOnClickListener != null) {
             holder.view.setOnClickListener(l -> {
-                mModOnClickListener.onClick(mod);
+                mOnClickListener.onClick(mod);
             });
         }
-        holder.modImage.setImageBitmap(mod.getImage());
+        holder.modImage.setImageBitmap(mod.getCover());
         holder.modName.setText(mod.getName());
-        holder.modAuthor.setText(AUTHOR + mod.getAuthor());
-        holder.modVersion.setText(VERSION + mod.getVersion());
+        holder.modAuthor.setText("作者：".concat(mod.getAuthor()));
+        holder.modVersion.setText("版本：".concat(String.valueOf(mod.getVersion())));
     }
 
     @Override
@@ -63,7 +55,7 @@ public class ModAdapter extends RecyclerView.Adapter<ModAdapter.ViewHolder> {
         public ViewHolder(View view) {
             super(view);
             this.view = view;
-            modImage = view.findViewById(R.id.modImage);
+            modImage = view.findViewById(R.id.modCover);
             modName = view.findViewById(R.id.modName);
             modAuthor = view.findViewById(R.id.modAuthor);
             modVersion = view.findViewById(R.id.modVersion);

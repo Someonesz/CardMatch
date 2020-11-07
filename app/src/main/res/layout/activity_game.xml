@@ -60,7 +60,7 @@
                     android:text="当前用时" />
 
                 <TextView
-                    android:id="@+id/game_real_time"
+                    android:id="@+id/gameTime"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="100"
@@ -85,7 +85,7 @@
                     android:text="当前步数" />
 
                 <TextView
-                    android:id="@+id/game_real_time_steps"
+                    android:id="@+id/gameSteps"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="100"
@@ -103,28 +103,28 @@
             android:gravity="center">
 
             <ImageView
-                android:id="@+id/action_restart"
+                android:id="@+id/actionRestart"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
                 android:src="@drawable/action_restart" />
 
             <ImageView
-                android:id="@+id/action_pause"
+                android:id="@+id/actionPause"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
                 android:src="@drawable/action_pause" />
 
             <ImageView
-                android:id="@+id/action_rank"
+                android:id="@+id/actionRank"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
                 android:src="@drawable/action_rank" />
 
             <ImageView
-                android:id="@+id/action_exit"
+                android:id="@+id/actionExit"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
@@ -268,7 +268,7 @@
 
         <!--暂停信息-->
         <LinearLayout
-            android:id="@+id/game_pause_info"
+            android:id="@+id/gamePauseInfo"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:background="#66FF9800"
@@ -285,7 +285,7 @@
 
         <!--游戏胜利信息-->
         <LinearLayout
-            android:id="@+id/game_win_info"
+            android:id="@+id/gameWinInfo"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:background="#80808080"
@@ -302,7 +302,7 @@
                 android:textSize="70sp" />
 
             <TextView
-                android:id="@+id/game_final_steps"
+                android:id="@+id/gameFinalSteps"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center"
@@ -311,7 +311,7 @@
                 android:textSize="50sp" />
 
             <TextView
-                android:id="@+id/game_final_time"
+                android:id="@+id/gameFinalTime"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center"
@@ -320,7 +320,7 @@
                 android:textSize="50sp" />
 
             <TextView
-                android:id="@+id/game_final_score"
+                android:id="@+id/gameFinalScore"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center"

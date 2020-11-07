@@ -45,13 +45,14 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        ProgressDialog mLoadingDialog = ProgressDialog.show(this, "请稍后", "正在加载数据");
-        RecyclerView mModList = findViewById(R.id.modList1);
+        RecyclerView mModList = findViewById(R.id.ModList);
+        mModList.setLayoutManager(new LinearLayoutManager(this));
+
         mIntent = new Intent(this, GameActivity.class);
         mLiveData = ModLiveData.getLiveData();
-
-        mModList.setLayoutManager(new LinearLayoutManager(this));
         mLiveData.observe(this, mods -> mModList.setAdapter(new ListAdapter(mods)));
+
+        ProgressDialog mLoadingDialog = ProgressDialog.show(this, "请稍后", "正在加载数据");
         new Thread(() -> {
             try {
                 Mod[] mods = GameManagement.getMods(this);
@@ -144,9 +145,6 @@ public class MainActivity extends AppCompatActivity {
      */
     private class ListAdapter extends RecyclerView.Adapter<ListAdapter.ViewHolder> {
 
-        private static final String AUTHOR = "作者：";
-        private static final String VERSION = "版本：";
-
         private final Mod[] mModList;
 
         public ListAdapter(Mod[] modList) {
@@ -164,10 +162,10 @@ public class MainActivity extends AppCompatActivity {
         public void onBindViewHolder(@NonNull ListAdapter.ViewHolder holder, int position) {
             Mod mod = mModList[position];
             holder.view.setOnClickListener(l -> startActivity(mIntent.putExtra("uuid", mod.getUUID())));
-            holder.modImage.setImageBitmap(mod.getImage());
+            holder.modImage.setImageBitmap(mod.getCover());
             holder.modName.setText(mod.getName());
-            holder.modAuthor.setText(AUTHOR + mod.getAuthor());
-            holder.modVersion.setText(VERSION + mod.getVersion());
+            holder.modAuthor.setText("作者：".concat(mod.getAuthor()));
+            holder.modVersion.setText("版本：".concat(String.valueOf(mod.getVersion())));
         }
 
         @Override
@@ -183,14 +181,13 @@ public class MainActivity extends AppCompatActivity {
             public ViewHolder(View view) {
                 super(view);
                 this.view = view;
-                modImage = view.findViewById(R.id.modImage);
+                modImage = view.findViewById(R.id.modCover);
                 modName = view.findViewById(R.id.modName);
                 modAuthor = view.findViewById(R.id.modAuthor);
                 modVersion = view.findViewById(R.id.modVersion);
             }
         }
     }
-
 
 }
 

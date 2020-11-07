@@ -5,7 +5,7 @@
     android:layout_height="100dp" >
 
     <ImageView
-        android:id="@+id/modImage"
+        android:id="@+id/modCover"
         android:layout_width="100dp"
         android:layout_height="match_parent" />
 

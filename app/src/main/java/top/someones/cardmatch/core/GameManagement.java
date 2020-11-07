@@ -48,7 +48,7 @@ public class GameManagement {
 
     private static boolean mInitialized = false;
     private static Bitmap mDefaultBitmap;
-    private static final Random random = new Random();
+    private static final Random mRandom = new Random();
 
     private GameManagement() {
     }
@@ -154,7 +154,7 @@ public class GameManagement {
                         if (bitmap == null) {
                             String backRes = cursor.getString(cursor.getColumnIndex("backRes"));
                             String[] subString = backRes.split(":");
-                            bitmap = BitmapFactory.decodeFile(resPath + "/" + subString[random.nextInt(subString.length)]);
+                            bitmap = BitmapFactory.decodeFile(resPath + "/" + subString[mRandom.nextInt(subString.length)]);
                         }
                         if (bitmap == null) {
                             bitmap = mDefaultBitmap;

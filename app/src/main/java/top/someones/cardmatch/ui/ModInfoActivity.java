@@ -53,11 +53,11 @@ public class ModInfoActivity extends AppCompatActivity {
             return;
         }
 
-        mNameView = findViewById(R.id.mod_name);
-        mAuthorView = findViewById(R.id.mod_author);
-        mVersionView = findViewById(R.id.mod_version);
-        mShowView = findViewById(R.id.mod_show);
-        mCoverView = findViewById(R.id.mod_cover);
+        mNameView = findViewById(R.id.modName);
+        mAuthorView = findViewById(R.id.modAuthor);
+        mVersionView = findViewById(R.id.modVersion);
+        mShowView = findViewById(R.id.modShow);
+        mCoverView = findViewById(R.id.modCover);
         mTakeView = findViewById(R.id.take);
 
         mHttpClient = new OkHttpClient();
