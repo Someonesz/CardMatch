@@ -61,16 +61,14 @@ public class ModInfoActivity extends BaseActivity {
 
         mHttpClient = new OkHttpClient();
         Call call = mHttpClient.newCall(new Request.Builder().get().url(HOSTS + uuid).build());
-        call.enqueue(new HttpCallback());
-
         mLoadingDialog = ProgressDialog.show(this, "请稍后", "正在连接到创意工坊", true, true, l -> {
             mCancel = true;
             call.cancel();
             this.finish();
         });
+        call.enqueue(new HttpCallback());
 
         mLiveData = ModLiveData.getLiveData();
-
         mTakeView.setOnClickListener(v -> {
             mTakeView.setEnabled(false);
             if ("订阅".contentEquals(mTakeView.getText()) || "更新".contentEquals(mTakeView.getText())) {

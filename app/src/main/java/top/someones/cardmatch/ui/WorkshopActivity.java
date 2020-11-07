@@ -45,10 +45,9 @@ public class WorkshopActivity extends BaseActivity {
         mModListView = findViewById(R.id.modList);
         mModListView.setLayoutManager(new LinearLayoutManager(this));
 
-        //连接后端服务
+        //连接后端服务,获取首页列表项
         mHttpClient = new OkHttpClient();
         Call call = mHttpClient.newCall(new Request.Builder().get().url(HOSTS + "hot").build());
-        call.enqueue(new HttpCallback());
 
         //显示进度条
         mLoadingDialog = ProgressDialog.show(this, "请稍后", "正在连接到创意工坊", true, true, l -> {
@@ -56,6 +55,8 @@ public class WorkshopActivity extends BaseActivity {
             call.cancel();
             this.finish();
         });
+
+        call.enqueue(new HttpCallback());
     }
 
     @Override
