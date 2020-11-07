@@ -7,7 +7,6 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
 
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -17,6 +16,7 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
+import top.someones.cardmatch.BaseActivity;
 import top.someones.cardmatch.R;
 import top.someones.cardmatch.core.ImageCache;
 import top.someones.cardmatch.entity.Mod;
@@ -27,7 +27,7 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 
-public class WorkshopActivity extends AppCompatActivity {
+public class WorkshopActivity extends BaseActivity {
     private static final String HOSTS = "http://someones.top:12450/mod/";
 
     private ProgressDialog mLoadingDialog;

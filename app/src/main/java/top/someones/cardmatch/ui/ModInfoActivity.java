@@ -8,14 +8,13 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.appcompat.app.AppCompatActivity;
-
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
+import top.someones.cardmatch.BaseActivity;
 import top.someones.cardmatch.R;
 import top.someones.cardmatch.core.GameManagement;
 import top.someones.cardmatch.core.ImageCache;
@@ -28,7 +27,7 @@ import org.json.JSONObject;
 import java.io.File;
 import java.io.IOException;
 
-public class ModInfoActivity extends AppCompatActivity {
+public class ModInfoActivity extends BaseActivity {
     private static final String HOSTS = "http://someones.top:12450/mod/";
 
     private String uuid;

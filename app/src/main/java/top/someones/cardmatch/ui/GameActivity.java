@@ -1,10 +1,6 @@
 package top.someones.cardmatch.ui;
 
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
-import top.someones.cardmatch.R;
-import top.someones.cardmatch.core.GameManagement;
-import top.someones.cardmatch.core.GameObserver;
 
 import android.annotation.SuppressLint;
 import android.os.Bundle;
@@ -17,7 +13,12 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-public class GameActivity extends AppCompatActivity {
+import top.someones.cardmatch.BaseActivity;
+import top.someones.cardmatch.R;
+import top.someones.cardmatch.core.GameManagement;
+import top.someones.cardmatch.core.GameObserver;
+
+public class GameActivity extends BaseActivity {
 
     private GameObserver mGameObserver;
     private Handler mGameHandler;
