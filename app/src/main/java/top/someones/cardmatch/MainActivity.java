@@ -8,6 +8,8 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
@@ -67,11 +69,7 @@ public class MainActivity extends BaseActivity {
         }).start();
     }
 
-    public void jump(View v) {
-        startActivity(new Intent(MainActivity.this, WorkshopActivity.class));
-    }
-
-    public void selectFile(View v) {
+    public void selectFile() {
         if (PermissionsManagement.checkPermissions(this, MainActivity.PERMISSIONS)) {
             Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
             intent.setType("application/zip");
@@ -80,6 +78,25 @@ public class MainActivity extends BaseActivity {
         } else {
             PermissionsManagement.verifyPermissions(this, MainActivity.PERMISSIONS, MainActivity.REQUEST_STORAGE_PERMISSION);
         }
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_main, menu);
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.importWorkshop:
+                startActivity(new Intent(MainActivity.this, WorkshopActivity.class));
+                break;
+            case R.id.import_local:
+                selectFile();
+                break;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     @Override
@@ -94,7 +111,7 @@ public class MainActivity extends BaseActivity {
                 }
             }
             if (hasPermissions)
-                selectFile(null);
+                selectFile();
         }
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
@@ -187,10 +204,4 @@ public class MainActivity extends BaseActivity {
             }
         }
     }
-
 }
-
-
-
-
-
