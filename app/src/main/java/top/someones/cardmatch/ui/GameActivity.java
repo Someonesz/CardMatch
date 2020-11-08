@@ -50,6 +50,8 @@ public class GameActivity extends BaseActivity {
             return;
         }
 
+        super.immersionStatusBar(true);
+
         //绑定按钮
         mGameTimeView = findViewById(R.id.gameTime);
         mGameStepsView = findViewById(R.id.gameSteps);
