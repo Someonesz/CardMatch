@@ -20,7 +20,6 @@
         <activity
             android:name=".ui.ModInfoActivity"
             android:theme="@style/Theme.NoActionBar" />
-        <activity android:name=".ui.TwoActivity" />
         <activity
             android:name=".MainActivity"
             android:theme="@style/Theme.Default">
