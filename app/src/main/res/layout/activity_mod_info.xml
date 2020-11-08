@@ -13,39 +13,62 @@
         android:layout_gravity="center"
         android:gravity="center" />
 
-    <TextView
-        android:id="@+id/modName"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="名字："
-        android:textSize="20sp" />
-
-    <TextView
-        android:id="@+id/modAuthor"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="作者："
-        android:textSize="20sp" />
-
-    <TextView
-        android:id="@+id/modVersion"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="版本："
-        android:textSize="20sp" />
-
-    <TextView
-        android:id="@+id/modShow"
-        android:layout_width="wrap_content"
+    <TableLayout
+        android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"
-        android:text="简介："
-        android:textSize="20sp" />
+        android:layout_weight="1">
+
+        <TableRow>
+
+            <TextView
+                android:text="名字："
+                android:textSize="20sp" />
+
+            <TextView
+                android:id="@+id/modName"
+                android:textSize="20sp" />
+        </TableRow>
+
+        <TableRow>
+
+            <TextView
+                android:text="作者："
+                android:textSize="20sp" />
+
+            <TextView
+                android:id="@+id/modAuthor"
+                android:textSize="20sp" />
+        </TableRow>
+
+        <TableRow>
+
+            <TextView
+                android:text="版本："
+                android:textSize="20sp" />
+
+            <TextView
+                android:id="@+id/modVersion"
+                android:textSize="20sp" />
+        </TableRow>
+
+        <TableRow>
+
+            <TextView
+                android:text="简介："
+                android:textSize="20sp" />
+
+            <TextView
+                android:id="@+id/modShow"
+                android:textSize="20sp" />
+        </TableRow>
+
+    </TableLayout>
 
     <Button
         android:id="@+id/take"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_gravity="center"
         android:text="订阅" />
 
 </LinearLayout>

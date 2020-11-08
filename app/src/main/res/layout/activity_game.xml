@@ -3,7 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/gameBackgroundColor"
+    android:background="#FFF8F8EE"
     android:gravity="center"
     android:orientation="vertical"
     tools:context=".ui.GameActivity">
@@ -41,7 +41,6 @@
                     android:textColor="#BAAC9F"
                     android:textSize="16sp" />
             </LinearLayout>
-
 
             <LinearLayout
                 android:layout_width="80dp"
@@ -91,7 +90,6 @@
                     android:text="100"
                     android:textColor="@color/white" />
             </LinearLayout>
-
 
         </RelativeLayout>
 
@@ -271,7 +269,7 @@
             android:id="@+id/gamePauseInfo"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:background="#66FF9800"
+            android:background="#CCF8F8EE"
             android:visibility="invisible">
 
             <TextView
@@ -288,7 +286,7 @@
             android:id="@+id/gameWinInfo"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:background="#80808080"
+            android:background="#CCF8F8EE"
             android:gravity="center"
             android:orientation="vertical"
             android:visibility="invisible">
