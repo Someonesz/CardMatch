@@ -1,6 +1,7 @@
 package top.someones.cardmatch.ui;
 
 import android.app.AlertDialog;
+import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -8,7 +9,6 @@ import android.graphics.BitmapFactory;
 import android.os.Bundle;
 
 import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -17,8 +17,8 @@ import okhttp3.Request;
 import okhttp3.Response;
 
 import top.someones.cardmatch.BaseActivity;
-import top.someones.cardmatch.R;
 import top.someones.cardmatch.core.ImageCache;
+import top.someones.cardmatch.databinding.ActivityWorkshopBinding;
 import top.someones.cardmatch.entity.Mod;
 
 import org.jetbrains.annotations.NotNull;
@@ -30,20 +30,20 @@ import java.io.IOException;
 public class WorkshopActivity extends BaseActivity {
     private static final String HOSTS = "http://someones.top:12450/mod/";
 
-    private ProgressDialog mLoadingDialog;
+    private Dialog mLoadingDialog;
     private OkHttpClient mHttpClient;
     private boolean mCancel = false;
 
-    private RecyclerView mModListView;
+    private ActivityWorkshopBinding mViewBinding;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_workshop);
+        mViewBinding = ActivityWorkshopBinding.inflate(getLayoutInflater());
+        setContentView(mViewBinding.getRoot());
 
         //初始化列表
-        mModListView = findViewById(R.id.modList);
-        mModListView.setLayoutManager(new LinearLayoutManager(this));
+        mViewBinding.modList.setLayoutManager(new LinearLayoutManager(this));
 
         //连接后端服务,获取首页列表项
         mHttpClient = new OkHttpClient();
@@ -104,7 +104,7 @@ public class WorkshopActivity extends BaseActivity {
                     mods[i] = new Mod(uuid, jsonItem.getString("name"), bitmap, jsonItem.getString("author"), jsonItem.getDouble("version"), null);
                 }
                 Intent intent = new Intent(WorkshopActivity.this, ModInfoActivity.class);
-                runOnUiThread(() -> mModListView.setAdapter(new ModAdapter(mods, mod -> startActivity(intent.putExtra("uuid", mod.getUUID())))));
+                runOnUiThread(() -> mViewBinding.modList.setAdapter(new ModAdapter(mods, mod -> startActivity(intent.putExtra("uuid", mod.getUUID())))));
             } catch (Exception e) {
                 e.printStackTrace();
                 runOnUiThread(() -> {

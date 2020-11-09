@@ -8,15 +8,13 @@ import android.os.Handler;
 import android.os.Message;
 import android.view.MotionEvent;
 import android.view.View;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import top.someones.cardmatch.BaseActivity;
 import top.someones.cardmatch.R;
 import top.someones.cardmatch.core.GameManagement;
 import top.someones.cardmatch.core.GameObserver;
+import top.someones.cardmatch.databinding.ActivityGameBinding;
 
 public class GameActivity extends BaseActivity {
 
@@ -30,16 +28,15 @@ public class GameActivity extends BaseActivity {
     private Runnable mGameTimer;
 
     private final MyViewSwitcher[] mGameElements = new MyViewSwitcher[16];
-    private TextView mGameTimeView, mGameStepsView;
-    private ImageView mRestartView, mPauseView, mRankView, mExitView;
-    private LinearLayout mGamePauseInfoLayout, mGameWinInfoLayout;
-    private TextView mGameFinalTimeView, mGameFinalStepsView, mGameFinalScoreView;
+
+    private ActivityGameBinding mViewBinding;
 
     @SuppressLint("ClickableViewAccessibility")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_game);
+        mViewBinding = ActivityGameBinding.inflate(getLayoutInflater());
+        setContentView(mViewBinding.getRoot());
 
         //初始化游戏观察者
         mGameHandler = new GameHandler();
@@ -53,29 +50,22 @@ public class GameActivity extends BaseActivity {
         super.immersionStatusBar(true);
 
         //绑定按钮
-        mGameTimeView = findViewById(R.id.gameTime);
-        mGameStepsView = findViewById(R.id.gameSteps);
-        mGamePauseInfoLayout = findViewById(R.id.gamePauseInfo);
-        mGameWinInfoLayout = findViewById(R.id.gameWinInfo);
-        mGameFinalTimeView = findViewById(R.id.gameFinalTime);
-        mGameFinalStepsView = findViewById(R.id.gameFinalSteps);
-        mGameFinalScoreView = findViewById(R.id.gameFinalScore);
-        mGameElements[0] = findViewById(R.id.c1);
-        mGameElements[1] = findViewById(R.id.c2);
-        mGameElements[2] = findViewById(R.id.c3);
-        mGameElements[3] = findViewById(R.id.c4);
-        mGameElements[4] = findViewById(R.id.c5);
-        mGameElements[5] = findViewById(R.id.c6);
-        mGameElements[6] = findViewById(R.id.c7);
-        mGameElements[7] = findViewById(R.id.c8);
-        mGameElements[8] = findViewById(R.id.c9);
-        mGameElements[9] = findViewById(R.id.c10);
-        mGameElements[10] = findViewById(R.id.c11);
-        mGameElements[11] = findViewById(R.id.c12);
-        mGameElements[12] = findViewById(R.id.c13);
-        mGameElements[13] = findViewById(R.id.c14);
-        mGameElements[14] = findViewById(R.id.c15);
-        mGameElements[15] = findViewById(R.id.c16);
+        mGameElements[0] = mViewBinding.c1;
+        mGameElements[1] = mViewBinding.c2;
+        mGameElements[2] = mViewBinding.c3;
+        mGameElements[3] = mViewBinding.c4;
+        mGameElements[4] = mViewBinding.c5;
+        mGameElements[5] = mViewBinding.c6;
+        mGameElements[6] = mViewBinding.c7;
+        mGameElements[7] = mViewBinding.c8;
+        mGameElements[8] = mViewBinding.c9;
+        mGameElements[9] = mViewBinding.c10;
+        mGameElements[10] = mViewBinding.c11;
+        mGameElements[11] = mViewBinding.c12;
+        mGameElements[12] = mViewBinding.c13;
+        mGameElements[13] = mViewBinding.c14;
+        mGameElements[14] = mViewBinding.c15;
+        mGameElements[15] = mViewBinding.c16;
 
         //绑定事件
         for (int i = 0; i < mGameElements.length; i++) {
@@ -91,86 +81,82 @@ public class GameActivity extends BaseActivity {
                     } else {
                         mSelect2 = index;
                         mGameElements[index].showBorder();
-                        tmp();
+                        submit();
                     }
                 }
             });
         }
 
         //新游戏
-        mRestartView = findViewById(R.id.actionRestart);
-        mRestartView.setOnTouchListener((v, event) -> {
+        mViewBinding.actionRestart.setOnTouchListener((v, event) -> {
             switch (event.getAction()) {
                 case MotionEvent.ACTION_DOWN:
-                    mRestartView.setImageResource(R.drawable.action_restart_touch);
+                    mViewBinding.actionRestart.setImageResource(R.drawable.action_restart_touch);
                     break;
                 case MotionEvent.ACTION_UP:
-                    mRestartView.setImageResource(R.drawable.action_restart);
+                    mViewBinding.actionRestart.setImageResource(R.drawable.action_restart);
                     break;
             }
             return false;
         });
-        mRestartView.setOnClickListener(v -> newGame());
+        mViewBinding.actionRestart.setOnClickListener(v -> newGame());
 
         //暂停计时
-        mPauseView = findViewById(R.id.actionPause);
-        mPauseView.setOnTouchListener((v, event) -> {
+        mViewBinding.actionPause.setOnTouchListener((v, event) -> {
             switch (event.getAction()) {
                 case MotionEvent.ACTION_DOWN:
-                    mPauseView.setImageResource(R.drawable.action_pause_touch);
+                    mViewBinding.actionPause.setImageResource(R.drawable.action_pause_touch);
                     break;
                 case MotionEvent.ACTION_UP:
-                    mPauseView.setImageResource(R.drawable.action_pause);
+                    mViewBinding.actionPause.setImageResource(R.drawable.action_pause);
                     break;
             }
             return false;
         });
-        mPauseView.setOnClickListener(v -> {
-            if (mGamePauseInfoLayout.getVisibility() == View.VISIBLE) {
-                mGamePauseInfoLayout.setVisibility(View.INVISIBLE);
+        mViewBinding.actionPause.setOnClickListener(v -> {
+            if (mViewBinding.gamePauseInfo.getVisibility() == View.VISIBLE) {
+                mViewBinding.gamePauseInfo.setVisibility(View.INVISIBLE);
                 mGameHandler.postDelayed(mGameTimer, 0);
             } else {
-                mGamePauseInfoLayout.setVisibility(View.VISIBLE);
+                mViewBinding.gamePauseInfo.setVisibility(View.VISIBLE);
                 mGameHandler.removeCallbacks(mGameTimer);
             }
         });
 
         //展示排名
-        mRankView = findViewById(R.id.actionRank);
-        mRankView.setOnTouchListener((v, event) -> {
+        mViewBinding.actionRank.setOnTouchListener((v, event) -> {
             switch (event.getAction()) {
                 case MotionEvent.ACTION_DOWN:
-                    mRankView.setImageResource(R.drawable.action_rank_touch);
+                    mViewBinding.actionRank.setImageResource(R.drawable.action_rank_touch);
                     break;
                 case MotionEvent.ACTION_UP:
-                    mRankView.setImageResource(R.drawable.action_rank);
+                    mViewBinding.actionRank.setImageResource(R.drawable.action_rank);
                     break;
             }
             return false;
         });
-        mRankView.setOnClickListener(v -> {
+        mViewBinding.actionRank.setOnClickListener(v -> {
             // TODO:展示排行榜
             Toast.makeText(GameActivity.this, "即将上线", Toast.LENGTH_SHORT).show();
         });
 
         //放弃并返回主页
-        mExitView = findViewById(R.id.actionExit);
-        mExitView.setOnTouchListener((v, event) -> {
+        mViewBinding.actionExit.setOnTouchListener((v, event) -> {
             switch (event.getAction()) {
                 case MotionEvent.ACTION_DOWN:
-                    mExitView.setImageResource(R.drawable.action_exit_touch);
+                    mViewBinding.actionExit.setImageResource(R.drawable.action_exit_touch);
                     break;
                 case MotionEvent.ACTION_UP:
-                    mExitView.setImageResource(R.drawable.action_exit);
+                    mViewBinding.actionExit.setImageResource(R.drawable.action_exit);
                     break;
             }
             return false;
         });
-        mExitView.setOnClickListener(v -> GameActivity.this.finish());
+        mViewBinding.actionExit.setOnClickListener(v -> GameActivity.this.finish());
 
         //消耗点击事件，阻止事件向下传递
-        mGamePauseInfoLayout.setOnClickListener(null);
-        mGameWinInfoLayout.setOnClickListener(null);
+        mViewBinding.gamePauseInfo.setOnClickListener(null);
+        mViewBinding.gameWinInfo.setOnClickListener(null);
 
         mGameTimer = new Timer();
         newGame();
@@ -185,24 +171,24 @@ public class GameActivity extends BaseActivity {
         for (int i = 0; i < mGameElements.length; i++) {
             mGameElements[i].setView(views[i][0], views[i][1]);
         }
-        mGameStepsView.setText(String.valueOf(0));
+        mViewBinding.gameSteps.setText(String.valueOf(0));
         mGameTime = -1;
-        mPauseView.setEnabled(true);
-        mRankView.setEnabled(true);
-        mGamePauseInfoLayout.setVisibility(View.INVISIBLE);
-        mGameWinInfoLayout.setVisibility(View.INVISIBLE);
+        mViewBinding.actionPause.setEnabled(true);
+        mViewBinding.actionRank.setEnabled(true);
+        mViewBinding.gamePauseInfo.setVisibility(View.INVISIBLE);
+        mViewBinding.gameWinInfo.setVisibility(View.INVISIBLE);
         mGameHandler.removeCallbacks(mGameTimer);
         mGameHandler.postDelayed(mGameTimer, 0);
     }
 
-    private void tmp() {
+    private void submit() {
         isNewGame = false;
         mGameElements[mSelect1].showNext();
         mGameElements[mSelect2].showNext();
         mGameObserver.check(mSelect1, mSelect2);
         mSelect1 = -1;
         mSelect2 = -1;
-        mGameStepsView.setText(String.valueOf(++mGameSteps));
+        mViewBinding.gameSteps.setText(String.valueOf(++mGameSteps));
     }
 
     @Override
@@ -227,12 +213,12 @@ public class GameActivity extends BaseActivity {
                         break;
                     case GameObserver.GAME_WIN:
                         this.removeCallbacks(mGameTimer);
-                        mPauseView.setEnabled(false);
-                        mRankView.setEnabled(false);
-                        mGameFinalTimeView.setText("用时:".concat(String.valueOf(mGameTime)));
-                        mGameFinalStepsView.setText("步数:".concat(String.valueOf(mGameSteps)));
-                        mGameFinalScoreView.setText("分数:".concat(String.valueOf(getScore(msg.arg1, mGameTime))));
-                        mGameWinInfoLayout.setVisibility(View.VISIBLE);
+                        mViewBinding.actionPause.setEnabled(false);
+                        mViewBinding.actionRank.setEnabled(false);
+                        mViewBinding.gameFinalTime.setText("用时:".concat(String.valueOf(mGameTime)));
+                        mViewBinding.gameFinalSteps.setText("步数:".concat(String.valueOf(mGameSteps)));
+                        mViewBinding.gameFinalScore.setText("分数:".concat(String.valueOf(getScore(msg.arg1, mGameTime))));
+                        mViewBinding.gameWinInfo.setVisibility(View.VISIBLE);
                         break;
                 }
                 super.handleMessage(msg);
@@ -248,7 +234,7 @@ public class GameActivity extends BaseActivity {
     private class Timer implements Runnable {
         @Override
         public void run() {
-            mGameTimeView.setText(String.valueOf(++mGameTime));
+            mViewBinding.gameTime.setText(String.valueOf(++mGameTime));
             mGameHandler.postDelayed(this, 1000);
         }
     }

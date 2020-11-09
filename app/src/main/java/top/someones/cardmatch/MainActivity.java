@@ -1,6 +1,7 @@
 package top.someones.cardmatch;
 
 import android.app.Activity;
+import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -10,10 +11,7 @@ import android.os.Environment;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -22,6 +20,8 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import top.someones.cardmatch.core.GameManagement;
+import top.someones.cardmatch.databinding.ActivityMainBinding;
+import top.someones.cardmatch.databinding.MainListLayoutBinding;
 import top.someones.cardmatch.entity.Mod;
 import top.someones.cardmatch.ui.GameActivity;
 import top.someones.cardmatch.ui.ModLiveData;
@@ -44,27 +44,26 @@ public class MainActivity extends BaseActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-
-        RecyclerView mModList = findViewById(R.id.ModList);
-        mModList.setLayoutManager(new LinearLayoutManager(this));
+        ActivityMainBinding viewBinding = ActivityMainBinding.inflate(getLayoutInflater());
+        setContentView(viewBinding.getRoot());
 
         mIntent = new Intent(this, GameActivity.class);
+        viewBinding.modList.setLayoutManager(new LinearLayoutManager(this));
         mLiveData = ModLiveData.getLiveData();
-        mLiveData.observe(this, mods -> mModList.setAdapter(new ListAdapter(mods)));
+        mLiveData.observe(this, mods -> viewBinding.modList.setAdapter(new ListAdapter(mods)));
 
-        ProgressDialog mLoadingDialog = ProgressDialog.show(this, "请稍后", "正在加载数据");
+        Dialog loadingDialog = ProgressDialog.show(this, "请稍后", "正在加载数据");
         new Thread(() -> {
             try {
                 Mod[] mods = GameManagement.getMods(this);
                 runOnUiThread(() -> {
-                    mModList.setAdapter(new ListAdapter(mods));
-                    mLoadingDialog.dismiss();
+                    viewBinding.modList.setAdapter(new ListAdapter(mods));
+                    loadingDialog.dismiss();
                 });
             } catch (Exception e) {
                 e.printStackTrace();
                 runOnUiThread(() -> Toast.makeText(MainActivity.this, "初始化失败", Toast.LENGTH_SHORT).show());
-                mLoadingDialog.dismiss();
+                loadingDialog.dismiss();
             }
         }).start();
     }
@@ -88,13 +87,11 @@ public class MainActivity extends BaseActivity {
 
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.importWorkshop:
-                startActivity(new Intent(MainActivity.this, WorkshopActivity.class));
-                break;
-            case R.id.import_local:
-                selectFile();
-                break;
+        int id = item.getItemId();
+        if (id == R.id.importWorkshop) {
+            startActivity(new Intent(MainActivity.this, WorkshopActivity.class));
+        } else if (id == R.id.import_local) {
+            selectFile();
         }
         return super.onOptionsItemSelected(item);
     }
@@ -170,18 +167,18 @@ public class MainActivity extends BaseActivity {
         @NonNull
         @Override
         public ListAdapter.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.mod_info_layout, parent, false);
-            return new ListAdapter.ViewHolder(view);
+            MainListLayoutBinding binding = MainListLayoutBinding.inflate(LayoutInflater.from(parent.getContext()), parent, false);
+            return new ListAdapter.ViewHolder(binding);
         }
 
         @Override
         public void onBindViewHolder(@NonNull ListAdapter.ViewHolder holder, int position) {
             Mod mod = mModList[position];
-            holder.view.setOnClickListener(l -> startActivity(mIntent.putExtra("uuid", mod.getUUID())));
-            holder.modImage.setImageBitmap(mod.getCover());
-            holder.modName.setText(mod.getName());
-            holder.modAuthor.setText("作者：".concat(mod.getAuthor()));
-            holder.modVersion.setText("版本：".concat(String.valueOf(mod.getVersion())));
+            holder.binding.getRoot().setOnClickListener(l -> startActivity(mIntent.putExtra("uuid", mod.getUUID())));
+            holder.binding.modCover.setImageBitmap(mod.getCover());
+            holder.binding.modName.setText(mod.getName());
+            holder.binding.modAuthor.setText("作者：".concat(mod.getAuthor()));
+            holder.binding.modVersion.setText("版本：".concat(String.valueOf(mod.getVersion())));
         }
 
         @Override
@@ -190,17 +187,12 @@ public class MainActivity extends BaseActivity {
         }
 
         private class ViewHolder extends RecyclerView.ViewHolder {
-            View view;
-            ImageView modImage;
-            TextView modName, modAuthor, modVersion;
 
-            public ViewHolder(View view) {
-                super(view);
-                this.view = view;
-                modImage = view.findViewById(R.id.modCover);
-                modName = view.findViewById(R.id.modName);
-                modAuthor = view.findViewById(R.id.modAuthor);
-                modVersion = view.findViewById(R.id.modVersion);
+            final MainListLayoutBinding binding;
+
+            public ViewHolder(MainListLayoutBinding binding) {
+                super(binding.getRoot());
+                this.binding = binding;
             }
         }
     }
