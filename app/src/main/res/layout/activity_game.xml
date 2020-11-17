@@ -150,25 +150,25 @@
                     android:layout_width="match_parent"
                     android:layout_height="100dp">
 
-                    <top.someones.cardmatch.ui.MyViewSwitcher
+                    <top.someones.cardmatch.ui.Cell
                         android:id="@+id/c1"
                         android:layout_width="0dp"
                         android:layout_height="match_parent"
                         android:layout_weight="1" />
 
-                    <top.someones.cardmatch.ui.MyViewSwitcher
+                    <top.someones.cardmatch.ui.Cell
                         android:id="@+id/c2"
                         android:layout_width="0dp"
                         android:layout_height="match_parent"
                         android:layout_weight="1" />
 
-                    <top.someones.cardmatch.ui.MyViewSwitcher
+                    <top.someones.cardmatch.ui.Cell
                         android:id="@+id/c3"
                         android:layout_width="0dp"
                         android:layout_height="match_parent"
                         android:layout_weight="1" />
 
-                    <top.someones.cardmatch.ui.MyViewSwitcher
+                    <top.someones.cardmatch.ui.Cell
                         android:id="@+id/c4"
                         android:layout_width="0dp"
                         android:layout_height="match_parent"
@@ -179,25 +179,25 @@
                     android:layout_width="match_parent"
                     android:layout_height="100dp">
 
-                    <top.someones.cardmatch.ui.MyViewSwitcher
+                    <top.someones.cardmatch.ui.Cell
                         android:id="@+id/c5"
                         android:layout_width="0dp"
                         android:layout_height="match_parent"
                         android:layout_weight="1" />
 
-                    <top.someones.cardmatch.ui.MyViewSwitcher
+                    <top.someones.cardmatch.ui.Cell
                         android:id="@+id/c6"
                         android:layout_width="0dp"
                         android:layout_height="match_parent"
                         android:layout_weight="1" />
 
-                    <top.someones.cardmatch.ui.MyViewSwitcher
+                    <top.someones.cardmatch.ui.Cell
                         android:id="@+id/c7"
                         android:layout_width="0dp"
                         android:layout_height="match_parent"
                         android:layout_weight="1" />
 
-                    <top.someones.cardmatch.ui.MyViewSwitcher
+                    <top.someones.cardmatch.ui.Cell
                         android:id="@+id/c8"
                         android:layout_width="0dp"
                         android:layout_height="match_parent"
@@ -209,25 +209,25 @@
                 android:layout_width="match_parent"
                 android:layout_height="100dp">
 
-                <top.someones.cardmatch.ui.MyViewSwitcher
+                <top.someones.cardmatch.ui.Cell
                     android:id="@+id/c9"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1" />
 
-                <top.someones.cardmatch.ui.MyViewSwitcher
+                <top.someones.cardmatch.ui.Cell
                     android:id="@+id/c10"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1" />
 
-                <top.someones.cardmatch.ui.MyViewSwitcher
+                <top.someones.cardmatch.ui.Cell
                     android:id="@+id/c11"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1" />
 
-                <top.someones.cardmatch.ui.MyViewSwitcher
+                <top.someones.cardmatch.ui.Cell
                     android:id="@+id/c12"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
@@ -238,25 +238,25 @@
                 android:layout_width="match_parent"
                 android:layout_height="100dp">
 
-                <top.someones.cardmatch.ui.MyViewSwitcher
+                <top.someones.cardmatch.ui.Cell
                     android:id="@+id/c13"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1" />
 
-                <top.someones.cardmatch.ui.MyViewSwitcher
+                <top.someones.cardmatch.ui.Cell
                     android:id="@+id/c14"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1" />
 
-                <top.someones.cardmatch.ui.MyViewSwitcher
+                <top.someones.cardmatch.ui.Cell
                     android:id="@+id/c15"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1" />
 
-                <top.someones.cardmatch.ui.MyViewSwitcher
+                <top.someones.cardmatch.ui.Cell
                     android:id="@+id/c16"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"

@@ -1,17 +1,15 @@
 package top.someones.cardmatch.ui;
 
-import androidx.annotation.NonNull;
-
 import android.annotation.SuppressLint;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.Message;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Toast;
 
 import top.someones.cardmatch.BaseActivity;
 import top.someones.cardmatch.R;
+import top.someones.cardmatch.core.GameCallback;
 import top.someones.cardmatch.core.GameManagement;
 import top.someones.cardmatch.core.GameObserver;
 import top.someones.cardmatch.databinding.ActivityGameBinding;
@@ -19,7 +17,7 @@ import top.someones.cardmatch.databinding.ActivityGameBinding;
 public class GameActivity extends BaseActivity {
 
     private GameObserver mGameObserver;
-    private Handler mGameHandler;
+    private final Handler mTimeHandler = new Handler();
     private int mSelect1 = -1, mSelect2 = -1;
     private boolean isNewGame = true;
 
@@ -27,7 +25,7 @@ public class GameActivity extends BaseActivity {
     private int mGameTime;
     private Runnable mGameTimer;
 
-    private final MyViewSwitcher[] mGameElements = new MyViewSwitcher[16];
+    private final Cell[] mCells = new Cell[16];
 
     private ActivityGameBinding mViewBinding;
 
@@ -39,8 +37,7 @@ public class GameActivity extends BaseActivity {
         setContentView(mViewBinding.getRoot());
 
         //初始化游戏观察者
-        mGameHandler = new GameHandler();
-        mGameObserver = GameManagement.getGameObserver(getIntent().getStringExtra("uuid"), this, mGameHandler);
+        mGameObserver = GameManagement.getGameObserver(getIntent().getStringExtra("uuid"), this, new Callback());
         if (mGameObserver == null) {
             Toast.makeText(this, "游戏初始化失败", Toast.LENGTH_LONG).show();
             this.finish();
@@ -50,37 +47,37 @@ public class GameActivity extends BaseActivity {
         super.immersionStatusBar(true);
 
         //绑定按钮
-        mGameElements[0] = mViewBinding.c1;
-        mGameElements[1] = mViewBinding.c2;
-        mGameElements[2] = mViewBinding.c3;
-        mGameElements[3] = mViewBinding.c4;
-        mGameElements[4] = mViewBinding.c5;
-        mGameElements[5] = mViewBinding.c6;
-        mGameElements[6] = mViewBinding.c7;
-        mGameElements[7] = mViewBinding.c8;
-        mGameElements[8] = mViewBinding.c9;
-        mGameElements[9] = mViewBinding.c10;
-        mGameElements[10] = mViewBinding.c11;
-        mGameElements[11] = mViewBinding.c12;
-        mGameElements[12] = mViewBinding.c13;
-        mGameElements[13] = mViewBinding.c14;
-        mGameElements[14] = mViewBinding.c15;
-        mGameElements[15] = mViewBinding.c16;
+        mCells[0] = mViewBinding.c1;
+        mCells[1] = mViewBinding.c2;
+        mCells[2] = mViewBinding.c3;
+        mCells[3] = mViewBinding.c4;
+        mCells[4] = mViewBinding.c5;
+        mCells[5] = mViewBinding.c6;
+        mCells[6] = mViewBinding.c7;
+        mCells[7] = mViewBinding.c8;
+        mCells[8] = mViewBinding.c9;
+        mCells[9] = mViewBinding.c10;
+        mCells[10] = mViewBinding.c11;
+        mCells[11] = mViewBinding.c12;
+        mCells[12] = mViewBinding.c13;
+        mCells[13] = mViewBinding.c14;
+        mCells[14] = mViewBinding.c15;
+        mCells[15] = mViewBinding.c16;
 
         //绑定事件
-        for (int i = 0; i < mGameElements.length; i++) {
+        for (int i = 0; i < mCells.length; i++) {
             final int index = i;
-            mGameElements[i].setOnClickListener(l -> {
+            mCells[i].setOnClickListener(l -> {
                 if (mSelect1 == -1) {
                     mSelect1 = index;
-                    mGameElements[index].showBorder();
+                    mCells[index].showBorder();
                 } else {
                     if (mSelect1 == index) {
                         mSelect1 = -1;
-                        mGameElements[index].hideBorder();
+                        mCells[index].hideBorder();
                     } else {
                         mSelect2 = index;
-                        mGameElements[index].showBorder();
+                        mCells[index].showBorder();
                         submit();
                     }
                 }
@@ -116,10 +113,10 @@ public class GameActivity extends BaseActivity {
         mViewBinding.actionPause.setOnClickListener(v -> {
             if (mViewBinding.gamePauseInfo.getVisibility() == View.VISIBLE) {
                 mViewBinding.gamePauseInfo.setVisibility(View.INVISIBLE);
-                mGameHandler.postDelayed(mGameTimer, 0);
+                mTimeHandler.postDelayed(mGameTimer, 0);
             } else {
                 mViewBinding.gamePauseInfo.setVisibility(View.VISIBLE);
-                mGameHandler.removeCallbacks(mGameTimer);
+                mTimeHandler.removeCallbacks(mGameTimer);
             }
         });
 
@@ -168,8 +165,8 @@ public class GameActivity extends BaseActivity {
         mSelect2 = -1;
         mGameSteps = 0;
         View[][] views = mGameObserver.newGame();
-        for (int i = 0; i < mGameElements.length; i++) {
-            mGameElements[i].setView(views[i][0], views[i][1]);
+        for (int i = 0; i < mCells.length; i++) {
+            mCells[i].setView(views[i][0], views[i][1]);
         }
         mViewBinding.gameSteps.setText(String.valueOf(0));
         mGameTime = -1;
@@ -177,14 +174,14 @@ public class GameActivity extends BaseActivity {
         mViewBinding.actionRank.setEnabled(true);
         mViewBinding.gamePauseInfo.setVisibility(View.INVISIBLE);
         mViewBinding.gameWinInfo.setVisibility(View.INVISIBLE);
-        mGameHandler.removeCallbacks(mGameTimer);
-        mGameHandler.postDelayed(mGameTimer, 0);
+        mTimeHandler.removeCallbacks(mGameTimer);
+        mTimeHandler.postDelayed(mGameTimer, 0);
     }
 
     private void submit() {
         isNewGame = false;
-        mGameElements[mSelect1].showNext();
-        mGameElements[mSelect2].showNext();
+        mCells[mSelect1].showNext();
+        mCells[mSelect2].showNext();
         mGameObserver.check(mSelect1, mSelect2);
         mSelect1 = -1;
         mSelect2 = -1;
@@ -193,36 +190,43 @@ public class GameActivity extends BaseActivity {
 
     @Override
     protected void onDestroy() {
-        mGameHandler.removeCallbacks(mGameTimer);
+        mTimeHandler.removeCallbacks(mGameTimer);
         super.onDestroy();
     }
 
-    class GameHandler extends Handler {
+    private class Callback implements GameCallback {
+        @Override
+        public void onSuccess(int arg1, int arg2) {
+        }
 
         @Override
-        public void handleMessage(@NonNull Message msg) {
-            if (!isNewGame) {
-                switch (msg.what) {
-                    case GameObserver.MATCH_FAILED:
-                        mGameElements[msg.arg1].showNext();
-                        mGameElements[msg.arg2].showNext();
-                        mGameElements[msg.arg1].hideBorder();
-                        mGameElements[msg.arg2].hideBorder();
-                        break;
-                    case GameObserver.MATCH_SUCCEED:
-                        break;
-                    case GameObserver.GAME_WIN:
-                        this.removeCallbacks(mGameTimer);
-                        mViewBinding.actionPause.setEnabled(false);
-                        mViewBinding.actionRank.setEnabled(false);
-                        mViewBinding.gameFinalTime.setText("用时:".concat(String.valueOf(mGameTime)));
-                        mViewBinding.gameFinalSteps.setText("步数:".concat(String.valueOf(mGameSteps)));
-                        mViewBinding.gameFinalScore.setText("分数:".concat(String.valueOf(getScore(msg.arg1, mGameTime))));
-                        mViewBinding.gameWinInfo.setVisibility(View.VISIBLE);
-                        break;
+        public void onFailure(int arg1, int arg2) {
+            new Thread(() -> {
+                try {
+                    Thread.sleep(1500);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
                 }
-                super.handleMessage(msg);
-            }
+                runOnUiThread(() -> {
+                    if (isNewGame)
+                        return;
+                    mCells[arg1].showNext();
+                    mCells[arg2].showNext();
+                    mCells[arg1].hideBorder();
+                    mCells[arg2].hideBorder();
+                });
+            }).start();
+        }
+
+        @Override
+        public void onWin() {
+            mTimeHandler.removeCallbacks(mGameTimer);
+            mViewBinding.actionPause.setEnabled(false);
+            mViewBinding.actionRank.setEnabled(false);
+            mViewBinding.gameFinalTime.setText("用时:".concat(String.valueOf(mGameTime)));
+            mViewBinding.gameFinalSteps.setText("步数:".concat(String.valueOf(mGameSteps)));
+            mViewBinding.gameFinalScore.setText("分数:".concat(String.valueOf(getScore(mGameSteps, mGameTime))));
+            mViewBinding.gameWinInfo.setVisibility(View.VISIBLE);
         }
 
         private int getScore(int steps, int time) {
@@ -235,7 +239,7 @@ public class GameActivity extends BaseActivity {
         @Override
         public void run() {
             mViewBinding.gameTime.setText(String.valueOf(++mGameTime));
-            mGameHandler.postDelayed(this, 1000);
+            mTimeHandler.postDelayed(this, 1000);
         }
     }
 

@@ -18,28 +18,28 @@ import top.someones.cardmatch.R;
  *
  * @author Someones
  */
-public class MyViewSwitcher extends FrameLayout {
+public class Cell extends FrameLayout {
 
     private int mWhichChild = 0;
     private final Context mContext;
     private boolean mHasNewView = true;
 
-    public MyViewSwitcher(@NonNull Context context) {
+    public Cell(@NonNull Context context) {
         super(context);
         mContext = context;
     }
 
-    public MyViewSwitcher(@NonNull Context context, @Nullable AttributeSet attrs) {
+    public Cell(@NonNull Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
         mContext = context;
     }
 
-    public MyViewSwitcher(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
+    public Cell(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         mContext = context;
     }
 
-    public MyViewSwitcher(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr, int defStyleRes) {
+    public Cell(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         super(context, attrs, defStyleAttr, defStyleRes);
         mContext = context;
     }
@@ -92,7 +92,7 @@ public class MyViewSwitcher extends FrameLayout {
         @Override
         public void onAnimationStart(Animation animation) {
             mHasNewView = false;
-            MyViewSwitcher.this.setEnabled(false);
+            Cell.this.setEnabled(false);
         }
 
         @Override
@@ -106,11 +106,11 @@ public class MyViewSwitcher extends FrameLayout {
             if (mWhichChild == 0) {
                 hideBorder();
             }
-            Rotate3d in = new Rotate3d(270, 360, MyViewSwitcher.this.getWidth() / 2.0f, MyViewSwitcher.this.getHeight() / 2.0f, 310.0f, false);
+            Rotate3d in = new Rotate3d(270, 360, Cell.this.getWidth() / 2.0f, Cell.this.getHeight() / 2.0f, 310.0f, false);
             in.setDuration(animation.getDuration());
             in.setInterpolator(new DecelerateInterpolator());
             in.setAnimationListener(new InAnimationListener());
-            MyViewSwitcher.this.startAnimation(in);
+            Cell.this.startAnimation(in);
         }
 
         @Override
@@ -129,7 +129,7 @@ public class MyViewSwitcher extends FrameLayout {
         @Override
         public void onAnimationEnd(Animation animation) {
             if (mWhichChild == 0)
-                MyViewSwitcher.this.setEnabled(true);
+                Cell.this.setEnabled(true);
         }
 
         @Override

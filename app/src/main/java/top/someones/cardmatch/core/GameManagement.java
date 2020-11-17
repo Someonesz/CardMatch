@@ -7,7 +7,6 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.os.Handler;
 import android.view.View;
 import android.widget.ImageView;
 
@@ -169,7 +168,7 @@ public class GameManagement {
         return mods;
     }
 
-    public static GameObserver getGameObserver(String uuid, Context context, Handler handler) {
+    public static GameObserver getGameObserver(String uuid, Context context, GameCallback callback) {
         String resPath;
         String frontResName;
         String[] backResName;
@@ -205,7 +204,7 @@ public class GameManagement {
             return null;
         }
         if (frontRes != null)
-            return new GameObserverAdaptor(context, handler, frontRes, backRes);
+            return new GameObserverAdaptor(context, callback, frontRes, backRes);
         return null;
     }
 
@@ -296,8 +295,8 @@ public class GameManagement {
         private final Bitmap mFrontRes;
         private final Bitmap[] mBackRes;
 
-        public GameObserverAdaptor(Context context, Handler handler, Bitmap mFrontRes, Bitmap[] mBackRes) {
-            super(context, handler);
+        public GameObserverAdaptor(Context context, GameCallback callback, Bitmap mFrontRes, Bitmap[] mBackRes) {
+            super(context, callback);
             this.mFrontRes = mFrontRes;
             this.mBackRes = mBackRes;
         }

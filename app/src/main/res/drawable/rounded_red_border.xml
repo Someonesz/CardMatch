@@ -4,7 +4,7 @@
     <!-- 设置边框的大小和颜色 -->
     <stroke
         android:width="3dip"
-        android:color="@android:color/holo_red_light" />
+        android:color="#B3FF4444" />
     <!-- 设置矩形内的颜色,此处为透明色 -->
     <solid android:color="@android:color/transparent" />
     <corners android:radius="10dp" />
