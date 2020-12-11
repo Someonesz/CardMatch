@@ -1,33 +1,55 @@
 package top.someones.cardmatch.ui;
 
 import android.annotation.SuppressLint;
+import android.content.Context;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteOpenHelper;
+import android.graphics.Point;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Toast;
 
+import org.jetbrains.annotations.NotNull;
+
+import java.io.IOException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+
+import okhttp3.Call;
+import okhttp3.FormBody;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 import top.someones.cardmatch.BaseActivity;
 import top.someones.cardmatch.R;
+import top.someones.cardmatch.core.DatabaseHelper;
 import top.someones.cardmatch.core.GameCallback;
 import top.someones.cardmatch.core.GameManagement;
 import top.someones.cardmatch.core.GameObserver;
 import top.someones.cardmatch.databinding.ActivityGameBinding;
 
 public class GameActivity extends BaseActivity {
+    private static final String HOSTS = "http://Someones.top:12450/score/add/";
 
+    private String mGameUUID;
     private GameObserver mGameObserver;
+    private String mNikeName;
+    private SQLiteOpenHelper mDatabaseHelper;
+    private OkHttpClient mHttpClient;
+    private final DateFormat sdf = SimpleDateFormat.getDateTimeInstance();
+    private final Point mRankDialogSize = new Point();
+
     private final Handler mTimeHandler = new Handler();
     private int mSelect1 = -1, mSelect2 = -1;
     private boolean isNewGame = true;
-
     private int mGameSteps = 0;
     private int mGameTime;
     private Runnable mGameTimer;
 
-    private final Cell[] mCells = new Cell[16];
-
     private ActivityGameBinding mViewBinding;
+    private final Cell[] mCells = new Cell[16];
 
     @SuppressLint("ClickableViewAccessibility")
     @Override
@@ -37,12 +59,23 @@ public class GameActivity extends BaseActivity {
         setContentView(mViewBinding.getRoot());
 
         //初始化游戏观察者
-        mGameObserver = GameManagement.getGameObserver(getIntent().getStringExtra("uuid"), this, new Callback());
-        if (mGameObserver == null) {
+        try {
+            mGameUUID = getIntent().getStringExtra("uuid");
+            if (mGameUUID == null)
+                throw new Exception();
+            mGameObserver = GameManagement.getGameObserver(mGameUUID, this, new Callback());
+            if (mGameObserver == null)
+                throw new Exception();
+        } catch (Exception e) {
             Toast.makeText(this, "游戏初始化失败", Toast.LENGTH_LONG).show();
             this.finish();
-            return;
         }
+        mNikeName = getSharedPreferences("user", Context.MODE_PRIVATE).getString("nikeName", null);
+        mDatabaseHelper = new DatabaseHelper(this);
+        mHttpClient = new OkHttpClient();
+        getWindowManager().getDefaultDisplay().getSize(mRankDialogSize);
+        mRankDialogSize.x *= 0.85;
+        mRankDialogSize.y *= 0.8;
 
         super.immersionStatusBar(true);
 
@@ -133,8 +166,7 @@ public class GameActivity extends BaseActivity {
             return false;
         });
         mViewBinding.actionRank.setOnClickListener(v -> {
-            // TODO:展示排行榜
-            Toast.makeText(GameActivity.this, "即将上线", Toast.LENGTH_SHORT).show();
+            new GameRankDialog(GameActivity.this, mGameUUID, mNikeName, mDatabaseHelper, mHttpClient, mRankDialogSize).show();
         });
 
         //放弃并返回主页
@@ -191,6 +223,7 @@ public class GameActivity extends BaseActivity {
     @Override
     protected void onDestroy() {
         mTimeHandler.removeCallbacks(mGameTimer);
+        mDatabaseHelper.close();
         super.onDestroy();
     }
 
@@ -222,11 +255,21 @@ public class GameActivity extends BaseActivity {
         public void onWin() {
             mTimeHandler.removeCallbacks(mGameTimer);
             mViewBinding.actionPause.setEnabled(false);
-            mViewBinding.actionRank.setEnabled(false);
             mViewBinding.gameFinalTime.setText("用时:".concat(String.valueOf(mGameTime)));
             mViewBinding.gameFinalSteps.setText("步数:".concat(String.valueOf(mGameSteps)));
-            mViewBinding.gameFinalScore.setText("分数:".concat(String.valueOf(getScore(mGameSteps, mGameTime))));
+            int score = getScore(mGameSteps, mGameTime);
+            mViewBinding.gameFinalScore.setText("分数:".concat(String.valueOf(score)));
             mViewBinding.gameWinInfo.setVisibility(View.VISIBLE);
+            try (SQLiteDatabase db = mDatabaseHelper.getWritableDatabase()) {
+                db.execSQL("INSERT INTO GameHistory (uuid,time,score) VALUES (?,?,?)", new Object[]{mGameUUID, sdf.format(System.currentTimeMillis()), score});
+            } catch (Exception e) {
+                Toast.makeText(GameActivity.this, "添加记录失败", Toast.LENGTH_SHORT).show();
+            }
+            if (mNikeName == null)
+                return;
+            FormBody formBody = new FormBody.Builder().add("uuid", mGameUUID).add("nickname", mNikeName).add("score", String.valueOf(score)).build();
+            Request request = new Request.Builder().url(HOSTS).post(formBody).build();
+            mHttpClient.newCall(request).enqueue(new SubmitScoreCallback());
         }
 
         private int getScore(int steps, int time) {
@@ -240,6 +283,18 @@ public class GameActivity extends BaseActivity {
         public void run() {
             mViewBinding.gameTime.setText(String.valueOf(++mGameTime));
             mTimeHandler.postDelayed(this, 1000);
+        }
+    }
+
+    private class SubmitScoreCallback implements okhttp3.Callback {
+
+        @Override
+        public void onFailure(@NotNull Call call, @NotNull IOException e) {
+            runOnUiThread(() -> Toast.makeText(GameActivity.this, "提交分数失败", Toast.LENGTH_SHORT).show());
+        }
+
+        @Override
+        public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
         }
     }
 
