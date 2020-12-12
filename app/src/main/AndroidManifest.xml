@@ -12,16 +12,16 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.CardMatch">
         <activity
-            android:name=".ui.GameActivity"
+            android:name=".ui.game.GameActivity"
             android:theme="@style/Theme.NoActionBar" />
         <activity
-            android:name=".ui.WorkshopActivity"
+            android:name=".ui.workshop.WorkShopActivity"
             android:theme="@style/Theme.NoActionBar" />
         <activity
-            android:name=".ui.ModInfoActivity"
+            android:name=".ui.workshop.ModInfoActivity"
             android:theme="@style/Theme.NoActionBar" />
         <activity
-            android:name=".MainActivity"
+            android:name=".ui.main.MainActivity"
             android:theme="@style/Theme.Default">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

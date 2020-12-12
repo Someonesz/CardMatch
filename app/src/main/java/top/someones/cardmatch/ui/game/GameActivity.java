@@ -1,4 +1,4 @@
-package top.someones.cardmatch.ui;
+package top.someones.cardmatch.ui.game;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
@@ -22,13 +22,13 @@ import okhttp3.FormBody;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
-import top.someones.cardmatch.BaseActivity;
 import top.someones.cardmatch.R;
 import top.someones.cardmatch.core.DatabaseHelper;
 import top.someones.cardmatch.core.GameCallback;
 import top.someones.cardmatch.core.GameManagement;
 import top.someones.cardmatch.core.GameObserver;
 import top.someones.cardmatch.databinding.ActivityGameBinding;
+import top.someones.cardmatch.ui.BaseActivity;
 
 public class GameActivity extends BaseActivity {
     private static final String HOSTS = "http://Someones.top:12450/score/add/";

@@ -1,4 +1,4 @@
-package top.someones.cardmatch.ui;
+package top.someones.cardmatch.ui.workshop;
 
 import android.view.LayoutInflater;
 import android.view.ViewGroup;

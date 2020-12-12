@@ -1,4 +1,4 @@
-package top.someones.cardmatch.ui;
+package top.someones.cardmatch.ui.game;
 
 import android.graphics.Camera;
 import android.graphics.Matrix;

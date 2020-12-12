@@ -1,4 +1,4 @@
-package top.someones.cardmatch.ui;
+package top.someones.cardmatch.ui.workshop;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -16,10 +16,10 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
-import top.someones.cardmatch.BaseActivity;
 import top.someones.cardmatch.core.ImageCache;
 import top.someones.cardmatch.databinding.ActivityWorkshopBinding;
 import top.someones.cardmatch.entity.Mod;
+import top.someones.cardmatch.ui.BaseActivity;
 
 import org.jetbrains.annotations.NotNull;
 import org.json.JSONArray;
@@ -27,7 +27,7 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 
-public class WorkshopActivity extends BaseActivity {
+public class WorkShopActivity extends BaseActivity {
     private static final String HOSTS = "http://someones.top:12450/mod/";
 
     private Dialog mLoadingDialog;
@@ -74,10 +74,10 @@ public class WorkshopActivity extends BaseActivity {
             if (mCancel)
                 return;
             runOnUiThread(() -> {
-                AlertDialog.Builder builder = new AlertDialog.Builder(WorkshopActivity.this);
+                AlertDialog.Builder builder = new AlertDialog.Builder(WorkShopActivity.this);
                 builder.setTitle("网络错误");
                 builder.setCancelable(false);
-                builder.setNegativeButton("返回", (dialog, which) -> WorkshopActivity.this.finish());
+                builder.setNegativeButton("返回", (dialog, which) -> WorkShopActivity.this.finish());
                 builder.setMessage(e.getMessage());
                 builder.create().show();
             });
@@ -103,15 +103,15 @@ public class WorkshopActivity extends BaseActivity {
                     }
                     mods[i] = new Mod(uuid, jsonItem.getString("name"), bitmap, jsonItem.getString("author"), jsonItem.getDouble("version"), null);
                 }
-                Intent intent = new Intent(WorkshopActivity.this, ModInfoActivity.class);
+                Intent intent = new Intent(WorkShopActivity.this, ModInfoActivity.class);
                 runOnUiThread(() -> mViewBinding.modList.setAdapter(new ModAdapter(mods, mod -> startActivity(intent.putExtra("uuid", mod.getUUID())))));
             } catch (Exception e) {
                 e.printStackTrace();
                 runOnUiThread(() -> {
-                    AlertDialog.Builder builder = new AlertDialog.Builder(WorkshopActivity.this);
+                    AlertDialog.Builder builder = new AlertDialog.Builder(WorkShopActivity.this);
                     builder.setTitle("错误");
                     builder.setCancelable(false);
-                    builder.setNegativeButton("返回", (dialog, which) -> WorkshopActivity.this.finish());
+                    builder.setNegativeButton("返回", (dialog, which) -> WorkShopActivity.this.finish());
                     builder.setMessage(e.getMessage());
                     builder.create().show();
                 });

@@ -1,4 +1,4 @@
-package top.someones.cardmatch;
+package top.someones.cardmatch.ui.main;
 
 import android.app.Activity;
 import android.app.Dialog;
@@ -19,14 +19,16 @@ import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import top.someones.cardmatch.ui.BaseActivity;
+import top.someones.cardmatch.R;
 import top.someones.cardmatch.core.GameManagement;
 import top.someones.cardmatch.databinding.ActivityMainBinding;
 import top.someones.cardmatch.databinding.MainListLayoutBinding;
 import top.someones.cardmatch.entity.Mod;
-import top.someones.cardmatch.ui.GameActivity;
-import top.someones.cardmatch.ui.ModLiveData;
 import top.someones.cardmatch.ui.PermissionsManagement;
-import top.someones.cardmatch.ui.WorkshopActivity;
+import top.someones.cardmatch.ui.game.GameActivity;
+import top.someones.cardmatch.ui.ModLiveData;
+import top.someones.cardmatch.ui.workshop.WorkShopActivity;
 
 import java.io.File;
 
@@ -89,7 +91,7 @@ public class MainActivity extends BaseActivity {
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         int id = item.getItemId();
         if (id == R.id.importWorkshop) {
-            startActivity(new Intent(MainActivity.this, WorkshopActivity.class));
+            startActivity(new Intent(MainActivity.this, WorkShopActivity.class));
         } else if (id == R.id.import_local) {
             selectFile();
         }

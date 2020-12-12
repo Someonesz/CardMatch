@@ -1,4 +1,4 @@
-package top.someones.cardmatch.ui;
+package top.someones.cardmatch.ui.game;
 
 import android.app.Dialog;
 import android.content.Context;

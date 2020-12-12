@@ -1,4 +1,4 @@
-package top.someones.cardmatch.ui;
+package top.someones.cardmatch.ui.workshop;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -12,10 +12,11 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
-import top.someones.cardmatch.BaseActivity;
 import top.someones.cardmatch.core.GameManagement;
 import top.someones.cardmatch.core.ImageCache;
 import top.someones.cardmatch.databinding.ActivityModInfoBinding;
+import top.someones.cardmatch.ui.BaseActivity;
+import top.someones.cardmatch.ui.ModLiveData;
 
 import org.apache.commons.io.FileUtils;
 import org.jetbrains.annotations.NotNull;
