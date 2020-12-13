@@ -16,4 +16,6 @@
 
     <color name="rank_title_checked">#A85F5F</color>
     <color name="rank_title_unchecked">#8A8663</color>
+
+    <color name="search_box_bg">#F5F5F5</color>
 </resources>

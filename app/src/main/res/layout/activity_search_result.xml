@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context=".ui.workshop.SearchResultActivity">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:gravity="center"
+        android:paddingStart="5dp"
+        android:paddingEnd="5dp">
+
+        <FrameLayout
+            android:id="@+id/actionBack"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="@drawable/press_animation">
+
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:src="@drawable/ic_action_back" />
+
+        </FrameLayout>
+
+        <LinearLayout
+            android:id="@+id/searchBox"
+            android:layout_width="0dp"
+            android:layout_height="40dp"
+            android:layout_weight="1"
+            android:background="@drawable/search_box_bg"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:gravity="center"
+            android:paddingStart="10dp"
+            android:paddingEnd="10dp">
+
+            <ImageView
+                android:layout_width="40dp"
+                android:layout_height="25dp"
+                android:src="@drawable/ic_search" />
+
+            <EditText
+                android:id="@+id/searchKeyWord"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:autofillHints=""
+                android:background="@null"
+                android:gravity="center_vertical"
+                android:hint="请输入Mod名字"
+                android:imeOptions="actionSearch"
+                android:inputType="text"
+                android:singleLine="true" />
+
+        </LinearLayout>
+
+        <FrameLayout
+            android:id="@+id/actionSearch"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="@drawable/press_animation">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_gravity="center"
+                android:gravity="center"
+                android:text="搜索"
+                android:textColor="@color/black"
+                android:textSize="15sp" />
+        </FrameLayout>
+
+    </LinearLayout>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/searchResultList"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="20dp" />
+
+</LinearLayout>

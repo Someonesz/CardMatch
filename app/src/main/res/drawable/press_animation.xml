@@ -1,0 +1,17 @@
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- 没有获得焦点时的背景 -->
+    <item android:state_pressed="false">
+        <shape android:shape="oval">
+            <solid android:color="@color/transparent" />
+            <size android:width="30dp" android:height="30dp" />
+        </shape>
+    </item>
+    <!-- 获得焦点时 -->
+    <item android:state_pressed="true">
+        <shape android:shape="oval">
+            <!-- 填充的颜色 -->
+            <solid android:color="#B4B4BC" />
+            <size android:width="30dp" android:height="30dp" />
+        </shape>
+    </item>
+</selector>

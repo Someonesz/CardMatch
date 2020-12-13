@@ -3,6 +3,8 @@ package top.someones.cardmatch.ui.workshop;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
 
+import java.util.List;
+
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import top.someones.cardmatch.databinding.ModInfoLayoutBinding;
@@ -10,10 +12,10 @@ import top.someones.cardmatch.entity.Mod;;
 
 public class ModAdapter extends RecyclerView.Adapter<ModAdapter.ViewHolder> {
 
-    private final Mod[] mModList;
+    private final List<Mod> mModList;
     private final ModOnClickListener mOnClickListener;
 
-    public ModAdapter(Mod[] modList, ModOnClickListener modOnClickListener) {
+    public ModAdapter(List<Mod> modList, ModOnClickListener modOnClickListener) {
         this.mModList = modList;
         this.mOnClickListener = modOnClickListener;
     }
@@ -26,7 +28,7 @@ public class ModAdapter extends RecyclerView.Adapter<ModAdapter.ViewHolder> {
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        Mod mod = mModList[position];
+        Mod mod = mModList.get(position);
         if (mOnClickListener != null) {
             holder.binding.getRoot().setOnClickListener(l -> {
                 mOnClickListener.onClick(mod);
@@ -40,7 +42,7 @@ public class ModAdapter extends RecyclerView.Adapter<ModAdapter.ViewHolder> {
 
     @Override
     public int getItemCount() {
-        return mModList.length;
+        return mModList.size();
     }
 
     static class ViewHolder extends RecyclerView.ViewHolder {

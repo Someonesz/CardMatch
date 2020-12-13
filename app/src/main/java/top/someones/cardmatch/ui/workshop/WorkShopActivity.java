@@ -3,10 +3,15 @@ package top.someones.cardmatch.ui.workshop;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
+import android.util.Log;
+import android.view.KeyEvent;
+import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 
 import androidx.recyclerview.widget.LinearLayoutManager;
 
@@ -26,6 +31,8 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class WorkShopActivity extends BaseActivity {
     private static final String HOSTS = "http://someones.top:12450/mod/";
@@ -33,6 +40,7 @@ public class WorkShopActivity extends BaseActivity {
     private Dialog mLoadingDialog;
     private OkHttpClient mHttpClient;
     private boolean mCancel = false;
+    private InputMethodManager mInputMethodManager;
 
     private ActivityWorkshopBinding mViewBinding;
 
@@ -48,6 +56,7 @@ public class WorkShopActivity extends BaseActivity {
         //连接后端服务,获取首页列表项
         mHttpClient = new OkHttpClient();
         Call call = mHttpClient.newCall(new Request.Builder().get().url(HOSTS + "hot").build());
+        call.enqueue(new HttpCallback());
 
         //显示进度条
         mLoadingDialog = ProgressDialog.show(this, "请稍后", "正在连接到创意工坊", true, true, l -> {
@@ -56,14 +65,38 @@ public class WorkShopActivity extends BaseActivity {
             this.finish();
         });
 
-        call.enqueue(new HttpCallback());
+        mInputMethodManager = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+        mViewBinding.actionSearch.setOnClickListener(v -> search(mViewBinding.searchKeyWord.getText().toString().trim(), mViewBinding.searchKeyWord));
+        mViewBinding.searchKeyWord.setOnKeyListener((v, keyCode, event) -> {
+            if (keyCode == KeyEvent.KEYCODE_ENTER) {
+                if (event.getAction() == KeyEvent.ACTION_UP) {
+                    search(mViewBinding.searchKeyWord.getText().toString().trim(), v);
+                }
+                return true;
+            }
+            return false;
+        });
+    }
+
+    private void search(String keyWord, View v) {
+        // 隐藏软键盘
+        if (mInputMethodManager != null)
+            mInputMethodManager.hideSoftInputFromWindow(v.getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
+        startActivity(new Intent(WorkShopActivity.this, SearchResultActivity.class).putExtra("keyword", keyWord));
+    }
+
+    @Override
+    protected void onRestart() {
+        super.onRestart();
+        // 去除搜索框的焦点
+        mViewBinding.searchBox.requestFocus();
     }
 
     @Override
     protected void onDestroy() {
+        super.onDestroy();
         //销毁时清除图片缓存
         ImageCache.cleanWorkshopCache();
-        super.onDestroy();
     }
 
     private class HttpCallback implements Callback {
@@ -88,7 +121,7 @@ public class WorkShopActivity extends BaseActivity {
             try {
                 String html = response.body().string();
                 JSONArray json = new JSONArray(html);
-                Mod[] mods = new Mod[json.length()];
+                List<Mod> mods = new ArrayList<>(json.length());
                 for (int i = 0; i < json.length(); i++) {
                     JSONObject jsonItem = json.getJSONObject(i);
                     String uuid = jsonItem.getString("uuid");
@@ -101,7 +134,7 @@ public class WorkShopActivity extends BaseActivity {
                         bitmap = BitmapFactory.decodeStream(imageResponse.body().byteStream());
                         ImageCache.addWorkshopCache(uuid, bitmap);
                     }
-                    mods[i] = new Mod(uuid, jsonItem.getString("name"), bitmap, jsonItem.getString("author"), jsonItem.getDouble("version"), null);
+                    mods.add(new Mod(uuid, jsonItem.getString("name"), bitmap, jsonItem.getString("author"), jsonItem.getDouble("version"), null));
                 }
                 Intent intent = new Intent(WorkShopActivity.this, ModInfoActivity.class);
                 runOnUiThread(() -> mViewBinding.modList.setAdapter(new ModAdapter(mods, mod -> startActivity(intent.putExtra("uuid", mod.getUUID())))));

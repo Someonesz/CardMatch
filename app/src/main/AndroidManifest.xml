@@ -11,6 +11,10 @@
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/Theme.CardMatch">
+
+        <activity
+            android:name=".ui.workshop.SearchResultActivity"
+            android:theme="@style/Theme.NoActionBar" />
         <activity
             android:name=".ui.game.GameActivity"
             android:theme="@style/Theme.NoActionBar" />
