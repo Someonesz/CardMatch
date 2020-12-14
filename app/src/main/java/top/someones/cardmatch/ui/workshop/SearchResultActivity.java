@@ -66,17 +66,17 @@ public class SearchResultActivity extends BaseActivity {
 
         // 异步请求数据
         mHttpClient = new OkHttpClient();
-        search(keyWord, null);
+        searchByKeyWord(keyWord);
 
         mInputMethodManager = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
         mViewBinding.searchKeyWord.setText(keyWord);
         // 绑定事件
         mViewBinding.actionBack.setOnClickListener(v -> this.finish());
-        mViewBinding.actionSearch.setOnClickListener(v -> search(mViewBinding.searchKeyWord.getText().toString().trim(), mViewBinding.searchKeyWord));
+        mViewBinding.actionSearch.setOnClickListener(v -> searchByKeyWord(mViewBinding.searchKeyWord.getText().toString().trim()));
         mViewBinding.searchKeyWord.setOnKeyListener((v, keyCode, event) -> {
             if (keyCode == KeyEvent.KEYCODE_ENTER) {
                 if (event.getAction() == KeyEvent.ACTION_UP) {
-                    search(mViewBinding.searchKeyWord.getText().toString().trim(), v);
+                    searchByKeyWord(mViewBinding.searchKeyWord.getText().toString().trim());
                 }
                 return true;
             }
@@ -84,21 +84,27 @@ public class SearchResultActivity extends BaseActivity {
         });
     }
 
-    private void search(String keyWord, View v) {
+    /**
+     * 按关键字搜索
+     *
+     * @param keyWord 关键字
+     */
+    private void searchByKeyWord(String keyWord) {
         // 隐藏软键盘
         if (mInputMethodManager != null)
-            mInputMethodManager.hideSoftInputFromWindow(v.getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
+            mInputMethodManager.hideSoftInputFromWindow(mViewBinding.searchKeyWord.getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
         // 去除搜索框的焦点
         mViewBinding.searchBox.requestFocus();
         // 准备Post请求用的表单
         FormBody formBody = new FormBody.Builder().add("keyword", keyWord).build();
         Request request = new Request.Builder().url(HOSTS + "search/").post(formBody).build();
         Call call = mHttpClient.newCall(request);
-        // 开始异步网络请求
-        call.enqueue(new HttpCallBack());
+        // 显示进度条
         mLoadingDialog = ProgressDialog.show(this, "请稍后", "正在搜索", true, true, l -> {
             call.cancel();
         });
+        // 开始异步网络请求
+        call.enqueue(new HttpCallBack());
     }
 
     @Override
@@ -112,26 +118,20 @@ public class SearchResultActivity extends BaseActivity {
 
         @Override
         public void onFailure(@NotNull Call call, @NotNull IOException e) {
-            mLoadingDialog.dismiss();
-            Log.d("搜索", e.getMessage());
             // 如果主动取消请求则不显示错误提示框
-            if (call.isCanceled())
+            if (call.isCanceled()) {
+                mLoadingDialog.dismiss();
                 return;
-            runOnUiThread(() -> {
-                AlertDialog.Builder builder = new AlertDialog.Builder(SearchResultActivity.this);
-                builder.setTitle("错误");
-                builder.setNegativeButton("我知道了", null);
-                String errorMsg = e.getMessage();
-                if (errorMsg != null) {
-                    if (errorMsg.startsWith("Failed to connect to someones.top"))
-                        errorMsg = "无法连接到服务器。";
-                    else if (errorMsg.startsWith("Unable to resolve host \"someones.top\"")) {
-                        errorMsg = "无法连接到服务器，请检查网络连接。";
-                    }
+            }
+            String errorMsg = e.getMessage();
+            if (errorMsg != null) {
+                if (errorMsg.startsWith("Failed to connect to someones.top"))
+                    errorMsg = "无法连接到服务器。";
+                else if (errorMsg.startsWith("Unable to resolve host \"someones.top\"")) {
+                    errorMsg = "无法连接到服务器，请检查网络连接。";
                 }
-                builder.setMessage(errorMsg);
-                builder.create().show();
-            });
+            }
+            showErrorDialog("网络错误", errorMsg);
         }
 
         @Override
@@ -142,21 +142,23 @@ public class SearchResultActivity extends BaseActivity {
             try {
                 json = new JSONObject(in);
             } catch (JSONException e) {
-                throw new IOException("返回的信息不是JSON格式");
+                showErrorDialog("错误", "返回的信息不是JSON格式");
+                return;
             }
             try {
                 if (json.getInt("flag") != 1) {
-                    throw new IOException(json.getString("服务器内部错误"));
+                    showErrorDialog("错误", "服务器内部错误");
+                    return;
                 }
                 mSearchResult.clear();
                 JSONArray jsonArray = json.getJSONArray("result");
                 for (int i = 0; i < jsonArray.length(); i++) {
                     JSONObject jsonItem = jsonArray.getJSONObject(i);
                     String uuid = jsonItem.getString("uuid");
-                    //尝试从缓存中获取图片
+                    // 尝试从缓存中获取图片
                     Bitmap bitmap = ImageCache.getCache(uuid);
                     if (bitmap == null) {
-                        //缓存中没有相应的图片，从后端获取
+                        // 缓存中没有相应的图片，从后端获取
                         Call imageCall = mHttpClient.newCall(new Request.Builder().get().url(HOSTS + uuid + "/img").build());
                         Response imageResponse = imageCall.execute();
                         bitmap = BitmapFactory.decodeStream(imageResponse.body().byteStream());
@@ -167,8 +169,25 @@ public class SearchResultActivity extends BaseActivity {
                 runOnUiThread(mResultListAdapter::notifyDataSetChanged);
                 mLoadingDialog.dismiss();
             } catch (JSONException e) {
-                throw new IOException("JSON解析错误");
+                showErrorDialog("错误", "JSON解析错误");
             }
+        }
+
+        /**
+         * 显示错误提示框
+         *
+         * @param title 提示框标题
+         * @param msg   提示框正文
+         */
+        private void showErrorDialog(String title, String msg) {
+            mLoadingDialog.dismiss();
+            runOnUiThread(() -> {
+                AlertDialog.Builder builder = new AlertDialog.Builder(SearchResultActivity.this);
+                builder.setTitle(title);
+                builder.setNegativeButton("我知道了", null);
+                builder.setMessage(msg);
+                builder.create().show();
+            });
         }
     }
 }

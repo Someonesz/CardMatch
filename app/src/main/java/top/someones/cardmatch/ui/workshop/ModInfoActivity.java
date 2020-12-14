@@ -32,7 +32,6 @@ public class ModInfoActivity extends BaseActivity {
     private String uuid;
     private Dialog mLoadingDialog;
     private OkHttpClient mHttpClient;
-    private boolean mCancel = false;
     private ModLiveData mLiveData;
 
     private ActivityModInfoBinding mViewBinding;
@@ -53,7 +52,6 @@ public class ModInfoActivity extends BaseActivity {
         mHttpClient = new OkHttpClient();
         Call call = mHttpClient.newCall(new Request.Builder().get().url(HOSTS + uuid).build());
         mLoadingDialog = ProgressDialog.show(this, "请稍后", "正在连接到创意工坊", true, true, l -> {
-            mCancel = true;
             call.cancel();
             this.finish();
         });
@@ -104,23 +102,33 @@ public class ModInfoActivity extends BaseActivity {
 
         @Override
         public void onFailure(@NotNull Call call, @NotNull IOException e) {
-            mLoadingDialog.dismiss();
-            if (mCancel)
+            // 如果主动取消请求则不显示错误提示框
+            if (call.isCanceled()) {
+                mLoadingDialog.dismiss();
                 return;
-            runOnUiThread(() -> {
-                AlertDialog.Builder builder = new AlertDialog.Builder(ModInfoActivity.this);
-                builder.setTitle("网络错误");
-                builder.setCancelable(false);
-                builder.setNegativeButton("返回", (dialog, which) -> ModInfoActivity.this.finish());
-                builder.setMessage(e.getMessage());
-                builder.create().show();
-            });
+            }
+            String errorMsg = e.getMessage();
+            if (errorMsg != null) {
+                if (errorMsg.startsWith("Failed to connect to someones.top"))
+                    errorMsg = "无法连接到服务器。";
+                else if (errorMsg.startsWith("Unable to resolve host \"someones.top\"")) {
+                    errorMsg = "无法连接到服务器，请检查网络连接。";
+                }
+            }
+            showErrorDialog("网络错误", errorMsg);
         }
 
         @Override
         public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+            JSONObject json;
             try {
-                JSONObject json = new JSONObject(response.body().string());
+                json = new JSONObject(response.body().string());
+            } catch (JSONException e) {
+                e.printStackTrace();
+                showErrorDialog("错误", "返回的信息不是JSON格式");
+                return;
+            }
+            try {
                 String name = json.getString("name");
                 String author = json.getString("author");
                 double version = json.getDouble("version");
@@ -140,18 +148,29 @@ public class ModInfoActivity extends BaseActivity {
                         }
                     }
                 });
+                mLoadingDialog.dismiss();
             } catch (JSONException e) {
                 e.printStackTrace();
-                runOnUiThread(() -> {
-                    AlertDialog.Builder builder = new AlertDialog.Builder(ModInfoActivity.this);
-                    builder.setTitle("错误");
-                    builder.setCancelable(false);
-                    builder.setNegativeButton("返回", (dialog, which) -> ModInfoActivity.this.finish());
-                    builder.setMessage(e.getMessage());
-                    builder.create().show();
-                });
+                showErrorDialog("错误", "JSON解析错误");
             }
+        }
+
+        /**
+         * 显示错误提示框
+         *
+         * @param title 提示框标题
+         * @param msg   提示框正文
+         */
+        private void showErrorDialog(String title, String msg) {
             mLoadingDialog.dismiss();
+            runOnUiThread(() -> {
+                AlertDialog.Builder builder = new AlertDialog.Builder(ModInfoActivity.this);
+                builder.setTitle(title);
+                builder.setNegativeButton("返回", (dialog, which) -> ModInfoActivity.this.finish());
+                builder.setOnCancelListener(v -> ModInfoActivity.this.finish());
+                builder.setMessage(msg);
+                builder.create().show();
+            });
         }
     }
 
