@@ -70,7 +70,7 @@ public class GameActivity extends BaseActivity {
             Toast.makeText(this, "游戏初始化失败", Toast.LENGTH_LONG).show();
             this.finish();
         }
-        mNikeName = getSharedPreferences("user", Context.MODE_PRIVATE).getString("nikeName", null);
+        mNikeName = getSharedPreferences("game", Context.MODE_PRIVATE).getString("nickName", null);
         mDatabaseHelper = new DatabaseHelper(this);
         mHttpClient = new OkHttpClient();
         getWindowManager().getDefaultDisplay().getSize(mRankDialogSize);
