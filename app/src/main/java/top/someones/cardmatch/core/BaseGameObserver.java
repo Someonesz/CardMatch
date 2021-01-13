@@ -13,6 +13,7 @@ public abstract class BaseGameObserver implements GameObserver {
     private final Context mContext;
     private final int[] mData = new int[16];
     private int mGameProgress = 0;
+    private String mGameToken;
 
     public BaseGameObserver(Context context, GameCallback callback) {
         this.mContext = context;
@@ -24,7 +25,9 @@ public abstract class BaseGameObserver implements GameObserver {
     }
 
     @Override
-    public View[][] newGame() {
+    public View[][] newGame(String token) {
+        mGameToken = token;
+        mGameProgress = 0;
         System.arraycopy(setData(), 0, mData, 0, mData.length);
         return makeGameView(mData);
     }
@@ -41,11 +44,11 @@ public abstract class BaseGameObserver implements GameObserver {
     public void check(int a, int b) {
         if (getData(a) == getData(b)) {
             mGameProgress++;
-            callback.onSuccess(a, b);
+            callback.onSuccess(mGameToken, a, b);
             if (mGameProgress == GameObserver.MAX_VIEW / 2)
-                callback.onWin();
+                callback.onWin(mGameToken);
         } else
-            callback.onFailure(a, b);
+            callback.onFailure(mGameToken, a, b);
     }
 
     protected int[] getRandomResourcesIndex(int resLength) {

@@ -1,11 +1,14 @@
 package top.someones.cardmatch.ui.game;
 
+import android.animation.Animator;
+import android.animation.AnimatorInflater;
+import android.animation.AnimatorListenerAdapter;
+import android.animation.AnimatorSet;
+import android.animation.ObjectAnimator;
 import android.content.Context;
 import android.util.AttributeSet;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.animation.Animation;
-import android.view.animation.DecelerateInterpolator;
 import android.widget.FrameLayout;
 
 import androidx.annotation.NonNull;
@@ -21,46 +24,89 @@ import top.someones.cardmatch.R;
 public class Cell extends FrameLayout {
 
     private int mWhichChild = 0;
-    private final Context mContext;
-    private boolean mHasNewView = true;
+    private View mBorder;
+    private AnimatorSet mCardOutAnimator;
+    private AnimatorSet mCardInAnimator;
+    private ObjectAnimator mCardFadeOutAnimator;
 
     public Cell(@NonNull Context context) {
         super(context);
-        mContext = context;
+        init(context);
     }
 
     public Cell(@NonNull Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
-        mContext = context;
+        init(context);
     }
 
     public Cell(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
-        mContext = context;
+        init(context);
     }
 
     public Cell(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         super(context, attrs, defStyleAttr, defStyleRes);
-        mContext = context;
+        init(context);
+    }
+
+    private void init(Context context) {
+        mBorder = new View(context);
+        mBorder.setBackgroundResource(R.drawable.rounded_red_border);
+        mBorder.setAlpha(0.5f);
+        addView(mBorder, getLayoutParams(mBorder));
+        mCardOutAnimator = (AnimatorSet) AnimatorInflater.loadAnimator(context, R.animator.card_flip_left_out);
+        mCardInAnimator = (AnimatorSet) AnimatorInflater.loadAnimator(context, R.animator.card_flip_left_in);
+        mCardFadeOutAnimator = ObjectAnimator.ofFloat(this, "alpha", 1.0f, 0.0f);
+        mCardFadeOutAnimator.setDuration(500);
+        mCardOutAnimator.setTarget(this);
+        mCardInAnimator.setTarget(this);
+        mCardOutAnimator.addListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationStart(Animator animation) {
+                Cell.this.setEnabled(false);
+            }
+
+            @Override
+            public void onAnimationCancel(Animator animation) {
+                super.onAnimationCancel(animation);
+            }
+
+            @Override
+            public void onAnimationEnd(Animator animation) {// 翻转90度之后，换图
+                getChildAt(mWhichChild).setVisibility(View.GONE);
+                mWhichChild = mWhichChild == 1 ? 2 : 1;
+                getChildAt(mWhichChild).setVisibility(View.VISIBLE);
+                if (mWhichChild == 1) {
+                    hideBorder();
+                }
+                mCardInAnimator.start();
+            }
+        });
+        mCardInAnimator.addListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                if (mWhichChild == 1)
+                    Cell.this.setEnabled(true);
+            }
+        });
     }
 
     public void setView(View v1, View v2) {
-        if (this.getChildCount() != 0) {
-            mHasNewView = true;
-            clearAnimation();
-            this.removeAllViews();
-            this.setEnabled(true);
-            mWhichChild = 0;
+        if (mCardOutAnimator.isRunning())
+            mCardOutAnimator.end();
+        if (getChildCount() > 1) {
+            super.removeViewAt(2);
+            super.removeViewAt(1);
         }
+        mWhichChild = 1;
+        mCardFadeOutAnimator.end();
+        this.setEnabled(true);
+        this.setAlpha(1.0f);
         v1.setVisibility(View.VISIBLE);
         v2.setVisibility(View.GONE);
         super.addView(v1, getLayoutParams(v1));
         super.addView(v2, getLayoutParams(v2));
-        View bgView = new View(mContext);
-        bgView.setBackgroundResource(R.drawable.rounded_red_border);
-        bgView.setAlpha(0.5f);
-        bgView.setVisibility(GONE);
-        super.addView(bgView, getLayoutParams(bgView));
+        mBorder.setVisibility(GONE);
     }
 
     private ViewGroup.LayoutParams getLayoutParams(View v) {
@@ -72,70 +118,20 @@ public class Cell extends FrameLayout {
     }
 
     public void showNext() {
-        Rotate3d out = new Rotate3d(0, 90, getWidth() / 2.0f, getHeight() / 2.0f, 310.0f, false);
-        out.setDuration(500);
-        out.setInterpolator(new DecelerateInterpolator());
-        out.setAnimationListener(new OutAnimationListener());
-        startAnimation(out);
+        mCardOutAnimator.start();
+    }
+
+    public void fadeOut() {
+        this.setEnabled(false);
+        mCardFadeOutAnimator.start();
     }
 
     public void showBorder() {
-        this.getChildAt(2).setVisibility(VISIBLE);
+        mBorder.setVisibility(VISIBLE);
     }
 
     public void hideBorder() {
-        this.getChildAt(2).setVisibility(GONE);
-    }
-
-    private class OutAnimationListener implements Animation.AnimationListener {
-
-        @Override
-        public void onAnimationStart(Animation animation) {
-            mHasNewView = false;
-            Cell.this.setEnabled(false);
-        }
-
-        @Override
-        public void onAnimationEnd(Animation animation) {
-            if (mHasNewView) {
-                return;
-            }
-            getChildAt(mWhichChild).setVisibility(View.GONE);
-            mWhichChild = mWhichChild == 0 ? 1 : 0;
-            getChildAt(mWhichChild).setVisibility(View.VISIBLE);
-            if (mWhichChild == 0) {
-                hideBorder();
-            }
-            Rotate3d in = new Rotate3d(270, 360, Cell.this.getWidth() / 2.0f, Cell.this.getHeight() / 2.0f, 310.0f, false);
-            in.setDuration(animation.getDuration());
-            in.setInterpolator(new DecelerateInterpolator());
-            in.setAnimationListener(new InAnimationListener());
-            Cell.this.startAnimation(in);
-        }
-
-        @Override
-        public void onAnimationRepeat(Animation animation) {
-
-        }
-    }
-
-    private class InAnimationListener implements Animation.AnimationListener {
-
-        @Override
-        public void onAnimationStart(Animation animation) {
-
-        }
-
-        @Override
-        public void onAnimationEnd(Animation animation) {
-            if (mWhichChild == 0)
-                Cell.this.setEnabled(true);
-        }
-
-        @Override
-        public void onAnimationRepeat(Animation animation) {
-
-        }
+        mBorder.setVisibility(GONE);
     }
 
 }

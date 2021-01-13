@@ -6,7 +6,7 @@ public interface GameObserver {
 
     int MAX_VIEW = 16;
 
-    View[][] newGame();
+    View[][] newGame(String token);
 
     void check(int a, int b);
 }

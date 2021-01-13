@@ -16,6 +16,7 @@ import org.jetbrains.annotations.NotNull;
 import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.UUID;
 
 import okhttp3.Call;
 import okhttp3.FormBody;
@@ -43,10 +44,10 @@ public class GameActivity extends BaseActivity {
 
     private final Handler mTimeHandler = new Handler();
     private int mSelect1 = -1, mSelect2 = -1;
-    private boolean isNewGame = true;
     private int mGameSteps = 0;
     private int mGameTime;
     private Runnable mGameTimer;
+    private String mGameToken;
 
     private ActivityGameBinding mViewBinding;
     private final Cell[] mCells = new Cell[16];
@@ -165,9 +166,7 @@ public class GameActivity extends BaseActivity {
             }
             return false;
         });
-        mViewBinding.actionRank.setOnClickListener(v -> {
-            new GameRankDialog(GameActivity.this, mGameUUID, mNikeName, mDatabaseHelper, mHttpClient, mRankDialogSize).show();
-        });
+        mViewBinding.actionRank.setOnClickListener(v -> new GameRankDialog(GameActivity.this, mGameUUID, mNikeName, mDatabaseHelper, mHttpClient, mRankDialogSize).show());
 
         //放弃并返回主页
         mViewBinding.actionExit.setOnTouchListener((v, event) -> {
@@ -192,11 +191,11 @@ public class GameActivity extends BaseActivity {
     }
 
     private void newGame() {
-        isNewGame = true;
+        mGameToken = UUID.randomUUID().toString();
         mSelect1 = -1;
         mSelect2 = -1;
         mGameSteps = 0;
-        View[][] views = mGameObserver.newGame();
+        View[][] views = mGameObserver.newGame(mGameToken);
         for (int i = 0; i < mCells.length; i++) {
             mCells[i].setView(views[i][0], views[i][1]);
         }
@@ -211,7 +210,6 @@ public class GameActivity extends BaseActivity {
     }
 
     private void submit() {
-        isNewGame = false;
         mCells[mSelect1].showNext();
         mCells[mSelect2].showNext();
         mGameObserver.check(mSelect1, mSelect2);
@@ -229,11 +227,7 @@ public class GameActivity extends BaseActivity {
 
     private class Callback implements GameCallback {
         @Override
-        public void onSuccess(int arg1, int arg2) {
-        }
-
-        @Override
-        public void onFailure(int arg1, int arg2) {
+        public void onSuccess(String token, int arg1, int arg2) {
             new Thread(() -> {
                 try {
                     Thread.sleep(1500);
@@ -241,7 +235,24 @@ public class GameActivity extends BaseActivity {
                     e.printStackTrace();
                 }
                 runOnUiThread(() -> {
-                    if (isNewGame)
+                    if (!token.equals(mGameToken))
+                        return;
+                    mCells[arg1].fadeOut();
+                    mCells[arg2].fadeOut();
+                });
+            }).start();
+        }
+
+        @Override
+        public void onFailure(String token, int arg1, int arg2) {
+            new Thread(() -> {
+                try {
+                    Thread.sleep(1500);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                runOnUiThread(() -> {
+                    if (!token.equals(mGameToken))
                         return;
                     mCells[arg1].showNext();
                     mCells[arg2].showNext();
@@ -252,7 +263,7 @@ public class GameActivity extends BaseActivity {
         }
 
         @Override
-        public void onWin() {
+        public void onWin(String token) {
             mTimeHandler.removeCallbacks(mGameTimer);
             mViewBinding.actionPause.setEnabled(false);
             mViewBinding.gameFinalTime.setText("用时:".concat(String.valueOf(mGameTime)));
@@ -294,7 +305,7 @@ public class GameActivity extends BaseActivity {
         }
 
         @Override
-        public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+        public void onResponse(@NotNull Call call, @NotNull Response response) {
         }
     }
 
