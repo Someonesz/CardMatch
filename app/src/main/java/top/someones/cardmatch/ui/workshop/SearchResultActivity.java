@@ -13,15 +13,14 @@ import top.someones.cardmatch.entity.Mod;
 import top.someones.cardmatch.ui.BaseActivity;
 
 import android.app.AlertDialog;
+import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.KeyEvent;
-import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Toast;
 
@@ -41,7 +40,7 @@ public class SearchResultActivity extends BaseActivity {
     private final List<Mod> mSearchResult = new ArrayList<>();
     private ModAdapter mResultListAdapter;
     private InputMethodManager mInputMethodManager;
-    private ProgressDialog mLoadingDialog;
+    private Dialog mLoadingDialog;
 
     private ActivitySearchResultBinding mViewBinding;
 
@@ -137,7 +136,6 @@ public class SearchResultActivity extends BaseActivity {
         @Override
         public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
             String in = response.body().string();
-            Log.d("搜索", in);
             JSONObject json;
             try {
                 json = new JSONObject(in);

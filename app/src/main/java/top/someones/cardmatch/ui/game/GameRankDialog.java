@@ -8,7 +8,6 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.graphics.Point;
 import android.graphics.Typeface;
 import android.os.Handler;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -94,7 +93,6 @@ public class GameRankDialog extends Dialog {
 
     private void initData() {
         new Thread(() -> {
-            Log.d("排名", "加载本地数据");
             try (SQLiteDatabase db = mDatabaseHelper.getWritableDatabase()) {
                 try (Cursor cursor = db.rawQuery("SELECT TIME,SCORE FROM GameHistory WHERE UUID = ? ORDER BY SCORE DESC", new String[]{mGameUUID})) {
                     while (cursor.moveToNext()) {
@@ -105,7 +103,6 @@ public class GameRankDialog extends Dialog {
             mHandler.post(localListAdapter::notifyDataSetChanged);
         }).start();
         new Thread(() -> {
-            Log.d("排名", "加载世界数据");
             Call call = mHttpClient.newCall(new Request.Builder().get().url(HOSTS + mGameUUID).build());
             try (Response response = call.execute()) {
                 JSONArray array = new JSONArray(response.body().string());
@@ -114,10 +111,8 @@ public class GameRankDialog extends Dialog {
                     worldListData.add(new RankItemData(json.getString("nickName"), json.getInt("score")));
                 }
             } catch (IOException e) {
-                Log.d("排名", "加载世界数据失败！网络连接错误。" + e.getMessage());
                 mHandler.post(() -> Toast.makeText(getContext(), "加载世界数据失败！网络连接错误", Toast.LENGTH_SHORT).show());
             } catch (JSONException e) {
-                Log.d("排名", "加载世界数据失败！JSON解析错误。" + e.getMessage());
                 mHandler.post(() -> Toast.makeText(getContext(), "加载世界数据失败！JSON解析错误", Toast.LENGTH_SHORT).show());
             }
             mHandler.post(worldListAdapter::notifyDataSetChanged);
@@ -127,10 +122,7 @@ public class GameRankDialog extends Dialog {
     @Override
     public void show() {
         super.show();
-        Log.d("排名", "x：" + mSize.x);
-        Log.d("排名", "y：" + mSize.y);
         getWindow().setLayout(mSize.x, mSize.y);
-//        getWindow().setLayout(900, 1500);
         getWindow().setBackgroundDrawableResource(R.drawable.fillet_bg);
     }
 

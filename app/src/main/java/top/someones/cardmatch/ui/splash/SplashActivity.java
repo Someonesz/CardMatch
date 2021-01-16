@@ -11,7 +11,6 @@ import top.someones.cardmatch.ui.main.MainActivity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,7 +29,6 @@ public class SplashActivity extends BaseActivity {
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
 
         String nickName = getSharedPreferences("game", Context.MODE_PRIVATE).getString("nickName", null);
-        Log.d("启动", "nickName:" + nickName);
         if (nickName != null) {
             startActivity(intent);
         } else {
