@@ -12,6 +12,7 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.ViewGroup;
+import android.widget.SimpleAdapter;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -31,8 +32,6 @@ import top.someones.cardmatch.ui.ModLiveData;
 import top.someones.cardmatch.ui.workshop.WorkShopActivity;
 
 import java.io.File;
-
-import org.apache.commons.io.FileUtils;
 
 public class MainActivity extends BaseActivity {
 
@@ -147,12 +146,6 @@ public class MainActivity extends BaseActivity {
             return Environment.getExternalStorageDirectory().toString() + "/" + uriPath.substring(document.length());
         }
         return uriPath;
-    }
-
-    @Override
-    protected void onDestroy() {
-        FileUtils.deleteQuietly(getFileStreamPath("tmp"));
-        super.onDestroy();
     }
 
     /**

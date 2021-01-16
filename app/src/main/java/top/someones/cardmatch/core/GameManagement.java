@@ -7,8 +7,6 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.view.View;
-import android.widget.ImageView;
 
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipFile;
@@ -114,6 +112,7 @@ public class GameManagement {
             FileUtils.deleteQuietly(new File(part));
             throw e;
         }
+        FileUtils.deleteQuietly(modFile);
     }
 
     public static double getModVersion(Context context, String uuid) {
@@ -288,38 +287,5 @@ public class GameManagement {
         private static final String DELETE_MOD = "DELETE FROM Resources WHERE UUID = ?";
         private static final String FIND_MOD_VERSION = "SELECT version FROM Resources WHERE uuid = ?";
         private static final String INIT_GAME = "SELECT name,author,show,version,resPath,frontRes,backRes FROM Resources WHERE uuid = ?";
-    }
-
-    private static class GameObserverAdaptor extends BaseGameObserver {
-
-        private final Bitmap mFrontRes;
-        private final Bitmap[] mBackRes;
-
-        public GameObserverAdaptor(Context context, GameCallback callback, Bitmap mFrontRes, Bitmap[] mBackRes) {
-            super(context, callback);
-            this.mFrontRes = mFrontRes;
-            this.mBackRes = mBackRes;
-        }
-
-        @Override
-        protected int[] setData() {
-            return super.getRandomResourcesIndex(mBackRes.length);
-        }
-
-        @Override
-        protected View[][] makeGameView(int[] gameData) {
-            View[][] views = new View[16][2];
-            for (int i = 0; i < 16; i++) {
-                views[i][0] = getImageView(mFrontRes);
-                views[i][1] = getImageView(mBackRes[gameData[i]]);
-            }
-            return views;
-        }
-
-        private View getImageView(Bitmap res) {
-            ImageView imageView = new ImageView(super.getContext());
-            imageView.setImageBitmap(res);
-            return imageView;
-        }
     }
 }

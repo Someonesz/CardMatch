@@ -166,7 +166,11 @@ public class GameActivity extends BaseActivity {
             }
             return false;
         });
-        mViewBinding.actionRank.setOnClickListener(v -> new GameRankDialog(GameActivity.this, mGameUUID, mNikeName, mDatabaseHelper, mHttpClient, mRankDialogSize).show());
+        mViewBinding.actionRank.setOnClickListener(v -> {
+            if (!(mViewBinding.gamePauseInfo.getVisibility() == View.VISIBLE) && !(mViewBinding.gameWinInfo.getVisibility() == View.VISIBLE))
+                mViewBinding.actionPause.performClick();
+            new GameRankDialog(GameActivity.this, mGameUUID, mNikeName, mDatabaseHelper, mHttpClient, mRankDialogSize).show();
+        });
 
         //放弃并返回主页
         mViewBinding.actionExit.setOnTouchListener((v, event) -> {
