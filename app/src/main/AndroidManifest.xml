@@ -13,7 +13,8 @@
         android:theme="@style/Theme.CardMatch">
         <activity
             android:name=".ui.splash.SplashActivity"
-            android:theme="@style/Theme.NoActionBar">
+            android:theme="@style/Theme.A"
+            android:windowSoftInputMode="adjustResize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

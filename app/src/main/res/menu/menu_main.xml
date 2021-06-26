@@ -14,6 +14,10 @@
                 android:id="@+id/import_local"
                 android:title="选择文件"
                 app:showAsAction="never" />
+            <item
+                android:id="@+id/logout"
+                android:title="退出登录"
+                app:showAsAction="never" />
         </menu>
     </item>
 </menu>

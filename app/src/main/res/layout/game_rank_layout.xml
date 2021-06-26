@@ -80,9 +80,10 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
+            android:enabled="false"
             android:gravity="center"
             android:text="世界排名"
-            android:textColor="@color/rank_title_unchecked"
+            android:textColor="#D3D3D3"
             android:textSize="26sp" />
     </LinearLayout>
 
